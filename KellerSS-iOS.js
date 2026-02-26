@@ -1,3 +1,26 @@
+const DEVICE_LANG = (Device.language() || "pt").toLowerCase().substring(0, 2)
+const SPEECH = {
+  pt: {
+    start:    "Analisando, aguarde o KellerSS terminar",
+    half:     "Scanner em cinquenta por cento. Aguarde mais um pouco.",
+    probe:    "Scanner em noventa por cento. Aguarde mais um pouco.",
+    done:     "KellerSS finalizado. Analise os resultados com cuidado.",
+  },
+  en: {
+    start:    "Analyzing, please wait for KellerSS to finish.",
+    half:     "Scanner at fifty percent. Please wait a little longer.",
+    probe:    "Scanner at ninety percent. Almost done.",
+    done:     "KellerSS finished. Analyze the results carefully.",
+  },
+  es: {
+    start:    "Analizando, espera que KellerSS termine.",
+    half:     "Escáner al cincuenta por ciento. Espera un poco más.",
+    probe:    "Escáner al noventa por ciento. Ya casi termina.",
+    done:     "KellerSS finalizado. Analiza los resultados con cuidado.",
+  },
+}
+const S = SPEECH[DEVICE_LANG] || SPEECH["pt"]
+
 const VPS_HOSTING_KEYWORDS = [
   "hostinger", "hstgr",
   "locaweb",
@@ -560,7 +583,7 @@ async function analyze(entries) {
     let results = await lookupBatch(chunk)
 
     if (chunkNum === Math.ceil(totalChunks / 2) && totalChunks > 1) {
-      Speech.speak("Scanner em 50%. Aguarde mais um pouco.")
+      Speech.speak(S.half)
     }
 
     for (let j = 0; j < results.length; j++) {
@@ -599,7 +622,7 @@ async function analyze(entries) {
   }
 
   console.log(`Iniciando probe HTTP em ${candidates.length} suspeitos...`)
-  Speech.speak("Scanner em 90%. Aguarde mais um pouco.")
+  Speech.speak(S.probe)
   let probeResults = await Promise.all(candidates.map(c => probeHost(c.domain)))
 
   let findings = candidates.map((c, idx) => {
@@ -1288,9 +1311,9 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
   <div class="hero-name">Keller<span>SS</span></div>
   <div class="hero-credits">por <span class="credit-name">Keller</span> &middot; <span class="credit-name">Samir</span> &middot; <span class="credit-name">Katiau</span></div>
   <div class="lang-bar">
-    <button class="lang-btn active" id="btn-pt">PT-BR</button>
-    <button class="lang-btn" id="btn-en">EN</button>
-    <button class="lang-btn" id="btn-es">ES</button>
+    <button class="lang-btn active" onclick="setLang('pt')" id="btn-pt">PT-BR</button>
+    <button class="lang-btn" onclick="setLang('en')" id="btn-en">EN</button>
+    <button class="lang-btn" onclick="setLang('es')" id="btn-es">ES</button>
   </div>
   <div class="hero-file"><strong>Arquivo:</strong> ${filename}</div>
   <div class="hero-grid">
@@ -1831,21 +1854,14 @@ function setLang(lang) {
   });
 }
 window.setLang = setLang;
-
-(function() {
-  var langs = ['pt','en','es'];
-  langs.forEach(function(l) {
-    var btn = document.getElementById('btn-' + l);
-    if (btn) btn.addEventListener('click', function() { setLang(l); });
-  });
-})();
 <\/script>`;
 }
 
 async function showResult(html) {
   let wv = new WebView()
   await wv.loadHTML(html)
-  Speech.speak("KellerSS finalizado. Analise os resultados com cuidado.")
+  Speech.speak(S.done)
+  await wait(1200)
   await wv.present(false)
 }
 
@@ -1980,7 +1996,7 @@ async function main() {
 
   let filename = (ndjsonPath || "arquivo").split("/").pop()
 
-  Speech.speak("Analisando, aguarde o KellerSS terminar")
+  Speech.speak(S.start)
 
   let { findings, netEntries, cheatAppFindings, knownCheatFindings } = await analyze(entries)
 
