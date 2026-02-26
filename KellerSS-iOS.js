@@ -617,8 +617,6 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
     "login.vk.com":          "Login VK",
   }
 
-  const FF_FALLBACK_DOMAIN = "app-measurement.com"
-
   // Agrupa todas as entradas do FF por sessões (gap > 2min = nova sessão)
   let ffAll = netEntries
     .filter(e => FF_BUNDLES.includes(e.bundleID) && e.timeStamp)
@@ -651,10 +649,7 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
         return { ts: anchor.timeStamp, loginType: FF_SECONDARY_DOMAINS[d], bundleID: anchor.bundleID }
       }
     }
-    // 3. Fallback: só se tiver app-measurement (abertura confirmada do app)
-    if (domains.has(FF_FALLBACK_DOMAIN)) {
-      return { ts: anchor.timeStamp, loginType: "Login Desconhecido", bundleID: anchor.bundleID }
-    }
+    // 3. Sem tipo de login identificável → ignorar sessão
     return null
   }
 
