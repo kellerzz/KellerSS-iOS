@@ -1,5 +1,3 @@
-
-
 const VPS_HOSTING_KEYWORDS = [
   "hostinger", "hstgr",
   "locaweb",
@@ -451,7 +449,7 @@ async function probeHost(domain) {
 
   for (let scheme of ["https", "http"]) {
     try {
-      let req = new Request(`${scheme}:${domain}`)
+      let req = new Request(`${scheme}://${domain}`)
       req.timeoutInterval = 6
       req.allowInsecureRequest = true
       let body = await req.loadString()
@@ -561,6 +559,10 @@ async function analyze(entries) {
 
     let results = await lookupBatch(chunk)
 
+    if (chunkNum === Math.ceil(totalChunks / 2) && totalChunks > 1) {
+      Speech.speak("Scanner em 50%. Aguarde mais um pouco.")
+    }
+
     for (let j = 0; j < results.length; j++) {
       let info = results[j]
       if (!info || info.status !== "success") continue
@@ -597,6 +599,7 @@ async function analyze(entries) {
   }
 
   console.log(`Iniciando probe HTTP em ${candidates.length} suspeitos...`)
+  Speech.speak("Scanner em 90%. Aguarde mais um pouco.")
   let probeResults = await Promise.all(candidates.map(c => probeHost(c.domain)))
 
   let findings = candidates.map((c, idx) => {
@@ -784,6 +787,8 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
 
   for (let k of knownCheatFindings) {
     let bundleList = k.bundles.map(b => `<span class="bundle">${b}</span>`).join(" ")
+    let indicatorKind = (k.indicator.includes(".") && !k.indicator.match(/^\d+\.\d+/)) ? "domain" : "ip"
+    let indicatorText = indicatorKind === "domain" ? "Domínio" : "IP"
     criticalCards += `
     <div class="card critical">
       <div class="card-header">
@@ -793,7 +798,7 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
       <div class="card-domain">${k.indicator}</div>
       <div class="grid">
         <div class="row"><span class="label" data-i18n="labelCheat">Cheat</span><span class="val reason" style="color:#ff4444;font-weight:bold">${k.desc}</span></div>
-        <div class="row"><span class="label" data-i18n="labelIndicator">Indicador</span><span class="val" data-i18n-indicator="${k.indicator.includes(".") && !k.indicator.match(/^\d+\.\d+/) ? "domain" : "ip"}">${k.indicator.includes(".") && !k.indicator.match(/^\d+\.\d+/) ? "Domínio" : "IP"} detectado no relatório de rede</span></div>
+        <div class="row"><span class="label" data-i18n="labelIndicator">Indicador</span><span class="val" data-i18n-indicator="${indicatorKind}">${indicatorText} detectado no relatório de rede</span></div>
         ${bundleList ? `<div class="row"><span class="label">Usado por</span><span class="val">${bundleList}</span></div>` : ""}
       </div>
     </div>`
@@ -1833,6 +1838,7 @@ async function showResult(html) {
   let wv = new WebView()
   await wv.loadHTML(html)
   await wv.present(false)
+  Speech.speak("KellerSS finalizado. Analise os resultados com cuidado.")
 }
 
 async function readFile(path) {
@@ -1967,15 +1973,6 @@ async function main() {
   let filename = (ndjsonPath || "arquivo").split("/").pop()
 
   Speech.speak("Analisando, aguarde o KellerSS terminar")
-
-  try {
-    let notif = new Notification()
-    notif.title = "⏳ KellerSS — Analisando..."
-    notif.body = "Processando os dados. O relatório abrirá em instantes."
-    notif.sound = "default"
-    await notif.schedule()
-  } catch(e) {
-  }
 
   let { findings, netEntries, cheatAppFindings, knownCheatFindings } = await analyze(entries)
 
