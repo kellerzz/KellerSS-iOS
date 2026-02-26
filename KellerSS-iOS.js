@@ -1,3 +1,5 @@
+
+
 const VPS_HOSTING_KEYWORDS = [
   "hostinger", "hstgr",
   "locaweb",
@@ -449,7 +451,7 @@ async function probeHost(domain) {
 
   for (let scheme of ["https", "http"]) {
     try {
-      let req = new Request(`${scheme}://${domain}`)
+      let req = new Request(`${scheme}:${domain}`)
       req.timeoutInterval = 6
       req.allowInsecureRequest = true
       let body = await req.loadString()
@@ -1964,11 +1966,16 @@ async function main() {
 
   let filename = (ndjsonPath || "arquivo").split("/").pop()
 
-  let processingAlert = new Alert()
-  processingAlert.title = "⏳ Analisando..."
-  processingAlert.message = "O script está processando os dados.\n\nEste processo pode levar alguns segundos — aguarde até o relatório aparecer."
-  processingAlert.addAction("OK, aguardando")
-  processingAlert.present()
+  Speech.speak("Analisando, aguarde o KellerSS terminar")
+
+  try {
+    let notif = new Notification()
+    notif.title = "⏳ KellerSS — Analisando..."
+    notif.body = "Processando os dados. O relatório abrirá em instantes."
+    notif.sound = "default"
+    await notif.schedule()
+  } catch(e) {
+  }
 
   let { findings, netEntries, cheatAppFindings, knownCheatFindings } = await analyze(entries)
 
