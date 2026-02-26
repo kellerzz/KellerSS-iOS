@@ -63,7 +63,7 @@ if (!code || code.startsWith("404")) {
   a.addAction("OK")
   await a.present()
 } else {
-  eval(code + "\nmain()")
+  eval(code)
 }
 ```
 
