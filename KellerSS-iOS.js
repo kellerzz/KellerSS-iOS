@@ -91,23 +91,57 @@ const RDNS_HOSTING_PATTERNS = [
 ]
 
 const CHEAT_APPS = {
-  "com.touchingapp.potatsolite":  "PotatsoLite — app de proxy iOS (mitmproxy cheat)",
-  "com.touchingapp.potatso":      "Potatso — app de proxy iOS",
-  "com.privateinternetaccess.ios": "PIA VPN",
-  "com.anonymousiphone.detoxme":  "Detox — proxy iOS",
-  "com.nssurge.inc.surge-ios":    "Surge — proxy/MITM iOS",
-  "com.luo.quantumultx":          "Quantumult X — proxy iOS",
-  "com.github.shadowsocks":       "Shadowsocks",
-  "com.futureland.vpnmaster":     "VPN Master",
-  "com.cloudflare.1dot1dot1dot1": "Cloudflare 1.1.1.1 (proxy/warp)",
-  "group.com.luo.quantumult":     "Quantumult — proxy iOS",
-  "com.netease.trojan":           "Trojan proxy",
-  "com.hiddify.app":              "Hiddify — proxy",
-  "com.karing.app":               "Karing — proxy",
-  "com.metacubex.ClashX":         "ClashX — proxy",
-  "com.ssrss.Ssrss":              "SSR iOS proxy",
-  "com.adguard.ios.AdguardPro":   "AdGuard Pro (pode ser usado como proxy MITM)",
-  "com.monite.proxyff":           "ProxyFF — app de proxy iOS (cheat confirmado)",
+  "com.touchingapp.potatsolite":      "PotatsoLite — proxy iOS (mitmproxy cheat)",
+  "com.touchingapp.potatso":          "Potatso — proxy iOS",
+  "com.monite.proxyff":               "ProxyFF — proxy iOS (cheat confirmado)",
+  "com.nssurge.inc.surge-ios":        "Surge — proxy/MITM iOS",
+  "com.luo.quantumultx":              "Quantumult X — proxy iOS",
+  "group.com.luo.quantumult":         "Quantumult — proxy iOS",
+  "com.shadowrocket.Shadowrocket":    "Shadowrocket — proxy iOS",
+  "com.liguangming.Shadowrocket":     "Shadowrocket (alt) — proxy iOS",
+  "com.github.shadowsocks":           "Shadowsocks",
+  "com.netease.trojan":               "Trojan proxy",
+  "com.hiddify.app":                  "Hiddify — proxy",
+  "com.karing.app":                   "Karing — proxy",
+  "com.metacubex.ClashX":             "ClashX — proxy",
+  "com.ssrss.Ssrss":                  "SSR iOS proxy",
+  "com.adguard.ios.AdguardPro":       "AdGuard Pro (proxy MITM)",
+  "com.privateinternetaccess.ios":    "PIA VPN",
+  "com.anonymousiphone.detoxme":      "Detox — proxy iOS",
+  "com.futureland.vpnmaster":         "VPN Master",
+  "com.cloudflare.1dot1dot1dot1":     "Cloudflare 1.1.1.1 (WARP proxy)",
+  "com.opa334.dopamine":              "Dopamine — Jailbreak",
+  "org.coolstar.sileo":               "Sileo — package manager JB",
+  "org.coolstar.odyssey":             "Odyssey — Jailbreak",
+  "com.electrateam.unc0ver":          "unc0ver — Jailbreak",
+  "com.tihmstar.checkra1n":           "checkra1n — Jailbreak",
+  "org.taurine.jailbreak":            "Taurine — Jailbreak",
+  "xyz.palera1n.palera1n":            "palera1n — Jailbreak",
+  "com.opa334.TrollStore":            "TrollStore — sideload sem JB",
+  "com.opa334.TrollStoreHelper":      "TrollStoreHelper",
+  "com.opa334.trolldecrypt":          "TrollDecrypt — decifrar IPAs",
+  "com.opa334.trollfools":            "TrollFools — injetor de tweaks",
+  "xyz.willy.Zebra":                  "Zebra — package manager JB",
+  "com.cydia.Cydia":                  "Cydia — package manager JB",
+  "com.rileytestut.AltStore":         "AltStore — sideload",
+  "com.altstore.altstoreclassic":     "AltStore Classic — sideload",
+  "com.sideloadly.sideloadly":        "Sideloadly — sideload",
+  "com.esign.ios":                    "ESign — sideload/IPA installer",
+  "com.esign.esign":                  "ESign (alt) — sideload",
+  "com.iosgods.iosgods":              "iOSGods — cheat app store",
+  "com.gbox.pubg":                    "GBox — cheat mod pubg/ff",
+  "com.tigisoftware.Filza":           "Filza — file manager root",
+  "com.tigisoftware.FilzaFree":       "Filza Free — file manager root",
+  "app.ish.iSH":                      "iSH — shell Linux no iOS",
+  "com.septudio.SSHClientLite":       "SSH Client Lite — shell remoto",
+  "live.cclerc.geranium":             "Geranium — tweak manager JB",
+  "com.apple.dt.Xcode":               "Xcode — IDE Apple (suspeito em contexto de jogo)",
+  "com.apple.Preferences.Developer":  "Preferências de Desenvolvedor (ativas)",
+  "com.apple.developer":              "Perfil de desenvolvedor Apple",
+  "com.shpion.cleaner":               "Spion Cleaner — limpeza de rastros suspeita",
+  "com.ifunbox.ifunbox":              "iFunBox — gerenciador de arquivos iOS",
+  "com.limneos.adprivacy":            "AdPrivacy — bloqueio/manipulação de rede",
+  "com.jjcm.nomoread":                "NoMoreAd — bloqueio de rede (MITM possível)",
 }
 
 const SUSPICIOUS_TLDS = [
@@ -134,7 +168,6 @@ const FALSE_POSITIVE_IPS = new Set([
   "104.29.155.27",  "104.29.156.120", "104.29.137.112",
 ])
 
-// IPs e domínios confirmados de cheats conhecidos — detecção CRÍTICA direta
 const KNOWN_CHEAT_INFRA = {
   "46.202.145.85":    "Fatality Cheats — servidor confirmado",
   "fatalitycheats.xyz": "Fatality Cheats — domínio oficial do cheat",
@@ -157,6 +190,107 @@ function parseNdjson(content) {
     .filter(l => l.length > 0)
     .map(l => { try { return JSON.parse(l) } catch(e) { return null } })
     .filter(Boolean)
+}
+
+function parseIpsFile(content) {
+  try {
+    let trimmed = content.trim()
+    let lines = trimmed.split("\n").map(l => l.trim()).filter(Boolean)
+    let headerLine = lines.find(l => l.startsWith("{"))
+    let dataLine   = lines.find(l => l.startsWith("["))
+    let header = null
+    try { header = headerLine ? JSON.parse(headerLine) : null } catch(e) {}
+    let entries = []
+    try { entries = dataLine ? JSON.parse(dataLine) : [] } catch(e) {}
+    return { header, entries }
+  } catch(e) {
+    return { header: null, entries: [] }
+  }
+}
+
+function looksLikePrivacyReport(content) {
+  let sample = content.trim().slice(0, 500)
+  return sample.includes("networkActivity") || sample.includes("bundleID") || sample.includes("timeStamp")
+}
+
+function looksLikeUsageFile(content) {
+  let sample = content.trim().slice(0, 300)
+  return sample.includes("xp_amp_app_usage") || sample.includes("roots_installed") || sample.includes("usageClientId")
+}
+
+const IPS_CHEAT_EXACT = new Set([
+  "com.touchingapp.potatsolite", "com.touchingapp.potatso",
+  "com.shadowrocket.Shadowrocket", "com.liguangming.Shadowrocket",
+  "com.monite.proxyff", "com.nssurge.inc.surge-ios",
+  "com.luo.quantumultx", "group.com.luo.quantumult",
+  "com.github.shadowsocks", "com.netease.trojan",
+  "com.hiddify.app", "com.karing.app", "com.metacubex.ClashX",
+  "com.ssrss.Ssrss", "com.adguard.ios.AdguardPro",
+  "com.privateinternetaccess.ios", "com.futureland.vpnmaster",
+  "com.cloudflare.1dot1dot1dot1",
+  "com.opa334.dopamine", "org.coolstar.sileo", "org.coolstar.odyssey",
+  "com.electrateam.unc0ver", "com.tihmstar.checkra1n",
+  "org.taurine.jailbreak", "xyz.palera1n.palera1n",
+  "com.opa334.TrollStore", "com.opa334.TrollStoreHelper",
+  "com.opa334.trolldecrypt", "com.opa334.trollfools",
+  "xyz.willy.Zebra", "com.cydia.Cydia",
+  "com.rileytestut.AltStore", "com.altstore.altstoreclassic",
+  "com.sideloadly.sideloadly", "com.esign.ios", "com.esign.esign",
+  "com.iosgods.iosgods", "com.gbox.pubg",
+  "com.tigisoftware.Filza", "com.tigisoftware.FilzaFree",
+  "app.ish.iSH", "com.septudio.SSHClientLite",
+  "live.cclerc.geranium", "com.shpion.cleaner",
+  "com.ifunbox.ifunbox", "com.limneos.adprivacy",
+  "com.apple.dt.Xcode", "com.apple.Preferences.Developer",
+])
+
+const IPS_CHEAT_KEYWORDS = [
+  "filza", "esign", "gbox", "sideload", "dopamine", "sileo",
+  "trollstore", "trolldecrypt", "trollfools", "trollhelper",
+  "spoofer", "cleaner", "unc0ver", "checkra1n", "jailbreak",
+  "cydia", "zebra", "altstore", "iosgods", "geranium",
+  "potatso", "shadowrocket", "surge", "quantumult", "hiddify",
+  "shadowsocks", "trojan", "karing", "proxyff",
+  "netlify", "cheat", "hack", "bypass", "inject", "tweak",
+  "substrate", "substitute", "libhooker",
+]
+
+function analyzeIps(parsed) {
+  let entries = parsed.entries || parsed || []
+  let results = []
+  let seen = new Set()
+
+  for (let e of entries) {
+    let bid = e.bundleId || ""
+    if (!bid || seen.has(bid)) continue
+    seen.add(bid)
+
+    let reason = null
+
+    if (IPS_CHEAT_EXACT.has(bid)) {
+      reason = CHEAT_APPS[bid] || bid
+    } else {
+      let bidLower = bid.toLowerCase()
+      for (let kw of IPS_CHEAT_KEYWORDS) {
+        if (bidLower.includes(kw)) {
+          reason = "Keyword suspeita: \"" + kw + "\" no bundle ID"
+          break
+        }
+      }
+    }
+
+    if (reason) {
+      results.push({
+        bundleId:    bid,
+        version:     e.shortAppVersion || "?",
+        eventType:   e.eventType || "?",
+        count:       e.count || 0,
+        reason:      reason,
+      })
+    }
+  }
+
+  return results
 }
 
 function validateReport(entries) {
@@ -195,7 +329,7 @@ const FIELDS = "status,country,city,isp,org,hosting,proxy,query,reverse,as"
 
 async function lookupBatch(targets) {
   try {
-    let req = new Request(`http://ip-api.com/batch?fields=${FIELDS}`)
+    let req = new Request(`http:
     req.method = "POST"
     req.body = Data.fromString(JSON.stringify(targets))
     req.headers = { "Content-Type": "application/json" }
@@ -315,7 +449,7 @@ async function probeHost(domain) {
 
   for (let scheme of ["https", "http"]) {
     try {
-      let req = new Request(`${scheme}://${domain}`)
+      let req = new Request(`${scheme}:
       req.timeoutInterval = 6
       req.allowInsecureRequest = true
       let body = await req.loadString()
@@ -392,7 +526,6 @@ async function analyze(entries) {
     }
   }
 
-  // Detecção direta de infraestrutura conhecida de cheats (IP ou domínio exato)
   let knownCheatFindings = []
   for (let e of netEntries) {
     let d = (e.domain || "").toLowerCase()
@@ -413,8 +546,6 @@ async function analyze(entries) {
       }
     }
   }
-  // Também checar se algum IP resolvido bate com os indicadores
-  // (isso é feito depois do lookup, mas registramos o domínio para referência cruzada)
   knownCheatFindings = knownCheatFindings.map(k => ({ ...k, bundles: [...k.bundles] }))
 
   const CHUNK = 100
@@ -523,7 +654,7 @@ function wait(ms) {
   return new Promise(resolve => Timer.schedule(ms, false, resolve))
 }
 
-function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, filename) {
+function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ipsFindings, ipsMeta, filename) {
   let allDomains = new Set(netEntries.map(e => e.domain || ""))
 
   let allTimestamps = netEntries.map(e => e.timeStamp).filter(Boolean).sort()
@@ -587,7 +718,6 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
 
   const FF_BUNDLES = ["com.dts.freefiremax", "com.dts.freefireth"]
 
-  // m.facebook.com no bundleID do FF = login Facebook confirmado (simples e direto)
   const FF_FB_LOGIN_DOMAIN = "m.facebook.com"
 
   const FF_SECONDARY_DOMAINS = {
@@ -600,7 +730,6 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
     "login.vk.com":          "Login VK",
   }
 
-  // Agrupa todas as entradas do FF por sessões (gap > 2min = nova sessão)
   let ffAll = netEntries
     .filter(e => FF_BUNDLES.includes(e.bundleID) && e.timeStamp)
     .sort((a, b) => a.timeStamp.localeCompare(b.timeStamp))
@@ -615,24 +744,20 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
   }
   if (_cur.length > 0) ffSessionGroups.push(_cur)
 
-  // Para cada sessão, determinar o tipo de login (Facebook, Twitter, Gmail, VK)
   function resolveSession(group) {
     let domains = new Set(group.map(e => e.domain))
     let anchor  = group[group.length - 1]
 
-    // Facebook: m.facebook.com no bundleID do FF = login Facebook confirmado
     if (domains.has(FF_FB_LOGIN_DOMAIN)) {
       return { ts: anchor.timeStamp, loginType: "Login Facebook", bundleID: anchor.bundleID }
     }
 
-    // Outros logins (Twitter, Gmail, VK)
     for (let d of domains) {
       if (FF_SECONDARY_DOMAINS[d]) {
         return { ts: anchor.timeStamp, loginType: FF_SECONDARY_DOMAINS[d], bundleID: anchor.bundleID }
       }
     }
 
-    // Sem login identificável → ignorar sessão
     return null
   }
 
@@ -655,7 +780,6 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
 
   let criticalCards = ""
 
-  // Cards de infraestrutura confirmada de cheats (IP/domínio direto)
   for (let k of knownCheatFindings) {
     let bundleList = k.bundles.map(b => `<span class="bundle">${b}</span>`).join(" ")
     criticalCards += `
@@ -741,6 +865,48 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
     ? `<span style="margin-left:8px;background:#3a1800;color:#ff8800;border:1px solid #ff8800;font-size:9px;padding:2px 7px;border-radius:10px;font-weight:bold">&#9888; MENOS DE 20MIN — Relatório pode não cobrir a partida inteira!</span>`
     : ""
 
+  let rootsWarn = ""
+  if (ipsMeta && ipsMeta.rootsInstalled > 0) {
+    rootsWarn = `
+  <div class="roots-banner">
+    <div class="roots-icon">🔐</div>
+    <div>
+      <div class="roots-label">Certificado Raiz Suspeito</div>
+      <div class="roots-detail">${ipsMeta.rootsInstalled} certificado${ipsMeta.rootsInstalled > 1 ? "s" : ""} raiz instalado${ipsMeta.rootsInstalled > 1 ? "s" : ""} (roots_installed: ${ipsMeta.rootsInstalled})</div>
+      <div class="roots-hint">Certificados raiz permitem interceptar tráfego HTTPS — padrão de proxy cheat tipo mitmproxy</div>
+    </div>
+  </div>`
+  }
+
+  let ipsSection = ""
+  if (ipsFindings && ipsFindings.length > 0) {
+    let ipsRows = ipsFindings.map(f => `
+      <div class="ips-row">
+        <div class="ips-row-left">
+          <span class="ips-bundle">${f.bundleId}</span>
+          <span class="ips-reason">${f.reason}</span>
+        </div>
+        <div class="ips-row-right">
+          <span class="ips-version">v${f.version}</span>
+          <span class="ips-badge ${f.eventType === 'launches' ? 'launched' : 'installed'}">${f.eventType === 'launches' ? '▶ Aberto' : '⬇ Instalado'}</span>
+        </div>
+      </div>`).join("")
+
+    ipsSection = `
+  <div class="ips-banner">
+    <div class="ips-header">
+      <span class="ips-icon">📲</span>
+      <div class="ips-header-text">
+        <div class="ips-title">Apps Suspeitos Instalados</div>
+        <div class="ips-sub">Detectados no histórico de uso do dispositivo</div>
+      </div>
+      <span class="ips-count">${ipsFindings.length}</span>
+    </div>
+    <div class="ips-rows">${ipsRows}</div>
+    <div class="ips-hint">⚠ Apps encontrados nos dados de análise do iPhone — indicam presença de ferramentas de cheat/jailbreak/proxy</div>
+  </div>`
+  }
+
   let staleBanner = staleWarning ? `
   <div class="stale-banner">
     <div class="stale-left">&#128337;</div>
@@ -751,7 +917,6 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
     </div>
   </div>` : ""
 
-  // Login type badge color
   function loginColor(type) {
     if (type.includes("Facebook"))  return "#1877f2"
     if (type.includes("Twitter") || type.includes("X")) return "#1da1f2"
@@ -848,8 +1013,10 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
     padding:9px 12px; border:1px solid #1a2a3a;
   }
   .hg-label { font-size:9px; color:#446; letter-spacing:1px; text-transform:uppercase; margin-bottom:3px; }
-  .hg-val   { font-size:12px; color:#ccd; }
-  .hg-val.cyan  { color:#00e5ff; font-weight:bold; font-size:14px; }
+  .hg-val        { font-size:12px; color:#ccd; }
+  .hg-val.cyan   { color:#00e5ff; font-weight:bold; font-size:14px; }
+  .hg-val.warn   { color:#ff8800; font-weight:bold; font-size:13px; }
+  .hg-card-warn  { background:#1a0a00 !important; border-color:#ff880055 !important; }
 
   /* LANGUAGE SELECTOR */
   .lang-bar {
@@ -970,6 +1137,51 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
   .isp    { color:#ffbb00; }
   .reason { color:#ff8a80; }
   .rdns        { color:#ce93d8; font-style:italic; }
+
+  .roots-banner {
+    display:flex; align-items:flex-start; gap:12px;
+    background:linear-gradient(135deg,#1a0a00,#120800);
+    border:1px solid #ff880066; border-radius:12px;
+    padding:14px; margin-bottom:12px;
+  }
+  .roots-icon   { font-size:22px; flex-shrink:0; }
+  .roots-label  { font-size:12px; font-weight:bold; color:#ff8800; letter-spacing:0.5px; margin-bottom:3px; }
+  .roots-detail { font-size:13px; color:#ffaa44; font-weight:bold; margin-bottom:4px; }
+  .roots-hint   { font-size:10px; color:#885500; line-height:1.4; }
+
+  .ips-banner {
+    background:linear-gradient(135deg,#1a0a1a,#120010);
+    border:1px solid #440044; border-radius:12px;
+    padding:14px; margin-bottom:12px;
+  }
+  .ips-header {
+    display:flex; align-items:center; gap:10px; margin-bottom:12px;
+  }
+  .ips-icon { font-size:22px; flex-shrink:0; }
+  .ips-header-text { flex:1; }
+  .ips-title { font-size:12px; font-weight:bold; color:#dd44ff; letter-spacing:0.5px; }
+  .ips-sub   { font-size:10px; color:#664466; margin-top:1px; }
+  .ips-count {
+    background:#2a0035; color:#dd44ff; border:1px solid #dd44ff55;
+    font-size:14px; font-weight:bold; padding:4px 10px; border-radius:20px;
+  }
+  .ips-rows  { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+  .ips-row {
+    display:flex; justify-content:space-between; align-items:flex-start; gap:8px;
+    background:#1a001a; border:1px solid #330033; border-radius:8px; padding:8px 10px;
+  }
+  .ips-row-left  { display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
+  .ips-row-right { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
+  .ips-bundle { font-size:11px; font-weight:bold; color:#cc88ff; word-break:break-all; }
+  .ips-reason { font-size:10px; color:#886688; line-height:1.4; }
+  .ips-version { font-size:9px; color:#554455; }
+  .ips-badge {
+    font-size:9px; font-weight:bold; padding:2px 7px; border-radius:10px;
+  }
+  .ips-badge.launched  { background:#1a0035; color:#aa44ff; border:1px solid #aa44ff55; }
+  .ips-badge.installed { background:#002200; color:#44aa44; border:1px solid #44aa4455; }
+  .ips-hint { font-size:9px; color:#553355; line-height:1.4; }
+
   .stale-banner {
     display:flex; align-items:flex-start; gap:12px;
     background:linear-gradient(135deg,#1a1200,#221800);
@@ -1064,9 +1276,9 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
 <body>
 
 <div class="hero">
-  <div class="hero-eyebrow">Detector de Proxy</div>
+  <div class="hero-eyebrow">Scanner iOS</div>
   <div class="hero-name">Keller<span>SS</span></div>
-  <div class="hero-credits">por <span class="credit-name">Keller</span> &middot; <span class="credit-name">Katiau</span> &middot; <span class="credit-name">Samir</span></div>
+  <div class="hero-credits">por <span class="credit-name">Keller</span> &middot; <span class="credit-name">Samir</span> &middot; <span class="credit-name">Katiau</span></div>
   <div class="lang-bar">
     <button class="lang-btn active" onclick="setLang('pt')" id="btn-pt">PT-BR</button>
     <button class="lang-btn" onclick="setLang('en')" id="btn-en">EN</button>
@@ -1090,6 +1302,14 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
       <div class="hg-label">Total conexões</div>
       <div class="hg-val">${netEntries.length}</div>
     </div>
+    ${ipsMeta && ipsMeta.iosVersion ? `<div class="hg-card">
+      <div class="hg-label">Versão iOS</div>
+      <div class="hg-val cyan">${ipsMeta.iosVersion}</div>
+    </div>` : ""}
+    ${ipsMeta && ipsMeta.rootsInstalled > 0 ? `<div class="hg-card hg-card-warn">
+      <div class="hg-label">⚠ Certificados raiz</div>
+      <div class="hg-val warn">${ipsMeta.rootsInstalled} instalado${ipsMeta.rootsInstalled > 1 ? "s" : ""}</div>
+    </div>` : ""}
   </div>
 </div>
 
@@ -1133,6 +1353,8 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
   <div class="divider"></div>` : ""}
 
   ${highCount > 0 ? `
+  ${rootsWarn}
+  ${ipsSection}
   <div class="section-header sh-high">
     <div class="sh-icon">&#128683;</div>
     <div class="sh-text">
@@ -1169,7 +1391,6 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
 <LANGSCRIPT_PLACEHOLDER>
 </body>
 </html>`
-  // inject lang script (defined outside template to avoid backtick/interpolation conflicts)
   let html = rawHtml.replace('<LANGSCRIPT_PLACEHOLDER>', buildLangScript())
   return html
 }
@@ -1178,8 +1399,8 @@ function buildLangScript() {
   return `<script>
 var TRANSLATIONS = {
   pt: {
-    eyebrow: "Detector de Proxy",
-    credits: "por Keller · Katiau · Samir",
+    eyebrow: "Scanner iOS",
+    credits: "por Keller · Samir · Katiau",
     fileLabel: "Arquivo:",
     start: "Início",
     lastRecord: "Último registro",
@@ -1229,8 +1450,8 @@ var TRANSLATIONS = {
     domains: "domínios",
   },
   en: {
-    eyebrow: "Proxy Detector",
-    credits: "by Keller · Katiau · Samir",
+    eyebrow: "iOS Scanner",
+    credits: "by Keller · Samir · Katiau",
     fileLabel: "File:",
     start: "Start",
     lastRecord: "Last record",
@@ -1280,8 +1501,8 @@ var TRANSLATIONS = {
     domains: "domains",
   },
   es: {
-    eyebrow: "Detector de Proxy",
-    credits: "por Keller · Katiau · Samir",
+    eyebrow: "Scanner iOS",
+    credits: "por Keller · Samir · Katiau",
     fileLabel: "Archivo:",
     start: "Inicio",
     lastRecord: "Último registro",
@@ -1480,50 +1701,138 @@ async function showResult(html) {
   await wv.present(false)
 }
 
-async function main() {
-  let fileResult = await findNdjsonFile()
-
-  if (!fileResult) {
-    Script.complete()
-    return
-  }
-
-  let { path: filePath, fm: fileFm } = fileResult
-  let filename = filePath.split("/").pop()
-
-  let content
+async function readFile(path) {
+  let content = null
+  let fm = FileManager.iCloud()
   try {
-    if (fileFm.isFileStoredIniCloud && fileFm.isFileStoredIniCloud(filePath)) {
-      await fileFm.downloadFileFromiCloud(filePath)
+    if (fm.isFileStoredIniCloud && fm.isFileStoredIniCloud(path)) {
+      await fm.downloadFileFromiCloud(path)
     }
-    content = fileFm.readString(filePath)
-  } catch(e) {
-    try { content = FileManager.local().readString(filePath) } catch(e2) {}
+    content = fm.readString(path)
+  } catch(e) {}
+  if (!content) {
+    try { content = FileManager.local().readString(path) } catch(e2) {}
+  }
+  return content
+}
+
+async function main() {
+  let step1 = new Alert()
+  step1.title = "📋 Passo 1 de 3 — Relatório de Privacidade"
+  step1.message = "Vá em:\n\nAjustes → Privacidade e Segurança → Relatório de Privacidade de Apps\n\nRole até o final e toque em\n\"Ativar Relatório de Privacidade de Apps\"\n\nDepois toque em\n\"Exportar Relatório de Privacidade de Apps\"\ne salve o arquivo .ndjson em qualquer lugar (Arquivos, iCloud, etc)."
+  step1.addAction("Entendido, próximo →")
+  step1.addCancelAction("Cancelar")
+  if (await step1.present() === -1) { Script.complete(); return }
+
+  let step2 = new Alert()
+  step2.title = "📊 Passo 2 de 3 — Dados de Análise"
+  step2.message = "Vá em:\n\nAjustes → Privacidade e Segurança → Análise e Melhorias\n\nAtive as opções:\n• Compartilhar análise do iPhone\n• Compartilhar análise do iCloud\n• Compartilhar com desenvolvedores de app\n\nDepois volte e toque em\n\"Dados de Análise\"\nRole até o final e selecione o arquivo mais recente começando com\n\"xp_amp_app_usage_dnu\"\n\nToque no arquivo → toque no ícone de compartilhar → Salvar em Arquivos."
+  step2.addAction("Entendido, próximo →")
+  step2.addCancelAction("Cancelar")
+  if (await step2.present() === -1) { Script.complete(); return }
+
+  let step3 = new Alert()
+  step3.title = "✅ Passo 3 de 3 — Selecionar arquivos"
+  step3.message = "Agora selecione os 2 arquivos salvos.\n\nVocê pode selecioná-los em qualquer ordem — o sistema identifica automaticamente cada um.\n\n📋 App_Privacy_Report.ndjson\n📊 xp_amp_app_usage_dnu*.ips"
+  step3.addAction("Selecionar arquivo 1")
+  step3.addCancelAction("Cancelar")
+  if (await step3.present() === -1) { Script.complete(); return }
+
+  let path1 = await DocumentPicker.openFile()
+  if (!path1) { Script.complete(); return }
+  let content1 = await readFile(path1)
+  if (!content1) {
+    let a = new Alert(); a.title = "Erro"; a.message = "Não foi possível ler o arquivo 1."; a.addAction("OK"); await a.present(); return
   }
 
-  if (!content) {
+  let notice2 = new Alert()
+  notice2.title = "Arquivo 2"
+  notice2.message = "Selecione o segundo arquivo (ou pule para analisar somente o primeiro)."
+  notice2.addAction("Selecionar arquivo 2")
+  notice2.addCancelAction("Pular")
+  let path2 = null
+  let content2 = null
+  if (await notice2.present() !== -1) {
+    path2 = await DocumentPicker.openFile()
+    if (path2) content2 = await readFile(path2)
+  }
+
+  let ndjsonContent = null, ndjsonPath = null
+  let ipsContent = null
+
+  function classifyContent(content, path) {
+    if (looksLikePrivacyReport(content)) return "ndjson"
+    if (looksLikeUsageFile(content)) return "ips"
+    let name = (path || "").split("/").pop().toLowerCase()
+    if (name.endsWith(".ndjson") || name.includes("privacy")) return "ndjson"
+    if (name.endsWith(".ips") || name.includes("xp_amp")) return "ips"
+    return "unknown"
+  }
+
+  let type1 = classifyContent(content1, path1)
+  let type2 = content2 ? classifyContent(content2, path2) : null
+
+  if (type2 && type1 === type2) {
     let a = new Alert()
-    a.title = "Erro"
-    a.message = "Não foi possível ler o arquivo."
+    a.title = "Arquivos do mesmo tipo"
+    a.message = type1 === "ndjson"
+      ? "Os 2 arquivos parecem ser App Privacy Reports. Selecione um xp_amp_app_usage_dnu*.ips como segundo arquivo."
+      : "Os 2 arquivos parecem ser dados de análise. Selecione um App_Privacy_Report.ndjson como primeiro arquivo."
     a.addAction("OK")
     await a.present()
     return
   }
 
-  let entries = parseNdjson(content)
+  if (type1 === "ndjson" || type2 === "ips") {
+    ndjsonContent = content1; ndjsonPath = path1
+    ipsContent = content2
+  } else if (type1 === "ips" || type2 === "ndjson") {
+    ipsContent = content1
+    ndjsonContent = content2; ndjsonPath = path2
+  } else {
+    let a = new Alert()
+    a.title = "Arquivo não reconhecido"
+    a.message = "Não foi possível identificar o tipo dos arquivos.\n\nVerifique se selecionou:\n• App_Privacy_Report.ndjson\n• xp_amp_app_usage_dnu*.ips"
+    a.addAction("OK")
+    await a.present()
+    return
+  }
 
+  if (!ndjsonContent) {
+    let a = new Alert()
+    a.title = "App Privacy Report ausente"
+    a.message = "O arquivo App_Privacy_Report.ndjson é obrigatório.\n\nAjustes → Privacidade → Relatório de Privacidade de Apps → Exportar"
+    a.addAction("OK")
+    await a.present()
+    return
+  }
+
+  let entries = parseNdjson(ndjsonContent)
   let validation = validateReport(entries)
   if (!validation.ok) {
     let a = new Alert()
-    a.title = "Arquivo Inválido"
-    a.message = validation.reason + "\n\nEnvie um App Privacy Report gerado pelo próprio iPhone em:\nAjustes → Privacidade → Relatório de Privacidade de Apps → Exportar"
+    a.title = "App Privacy Report inválido"
+    a.message = validation.reason + "\n\nExporte em: Ajustes → Privacidade → Relatório de Privacidade de Apps → Exportar"
     a.addAction("OK")
     await a.present()
     return
   }
 
+  let ipsFindings = []
+  let ipsMeta = { iosVersion: null, rootsInstalled: 0 }
+  if (ipsContent) {
+    let parsed = parseIpsFile(ipsContent)
+    ipsFindings = analyzeIps(parsed)
+    if (parsed.header) {
+      let osMatch = (parsed.header.os_version || "").match(/iPhone OS ([\d.]+)/)
+      ipsMeta.iosVersion = osMatch ? osMatch[1] : parsed.header.os_version || null
+      ipsMeta.rootsInstalled = parsed.header.roots_installed || 0
+    }
+  }
+
+  let filename = (ndjsonPath || "arquivo").split("/").pop()
   let { findings, netEntries, cheatAppFindings, knownCheatFindings } = await analyze(entries)
 
-  let html = buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, filename)
+  let html = buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ipsFindings, ipsMeta, filename)
   await showResult(html)
 }
