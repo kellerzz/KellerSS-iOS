@@ -1288,9 +1288,9 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
   <div class="hero-name">Keller<span>SS</span></div>
   <div class="hero-credits">por <span class="credit-name">Keller</span> &middot; <span class="credit-name">Samir</span> &middot; <span class="credit-name">Katiau</span></div>
   <div class="lang-bar">
-    <button class="lang-btn active" onclick="setLang('pt')" id="btn-pt">PT-BR</button>
-    <button class="lang-btn" onclick="setLang('en')" id="btn-en">EN</button>
-    <button class="lang-btn" onclick="setLang('es')" id="btn-es">ES</button>
+    <button class="lang-btn active" id="btn-pt">PT-BR</button>
+    <button class="lang-btn" id="btn-en">EN</button>
+    <button class="lang-btn" id="btn-es">ES</button>
   </div>
   <div class="hero-file"><strong>Arquivo:</strong> ${filename}</div>
   <div class="hero-grid">
@@ -1831,6 +1831,20 @@ function setLang(lang) {
   });
 }
 window.setLang = setLang;
+
+document.addEventListener('DOMContentLoaded', function() {
+  var langs = ['pt','en','es'];
+  langs.forEach(function(l) {
+    var btn = document.getElementById('btn-' + l);
+    if (btn) btn.addEventListener('click', function() { setLang(l); });
+  });
+
+  if (window.speechSynthesis) {
+    var utter = new SpeechSynthesisUtterance('KellerSS finalizado. Analise os resultados com cuidado.');
+    utter.lang = 'pt-BR';
+    window.speechSynthesis.speak(utter);
+  }
+});
 <\/script>`;
 }
 
@@ -1838,7 +1852,6 @@ async function showResult(html) {
   let wv = new WebView()
   await wv.loadHTML(html)
   await wv.present(false)
-  Speech.speak("KellerSS finalizado. Analise os resultados com cuidado.")
 }
 
 async function readFile(path) {
