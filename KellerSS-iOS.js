@@ -1855,26 +1855,41 @@ function setLang(lang) {
 }
 window.setLang = setLang;
 
-function bindLangButtons() {
-  var btnPt = document.getElementById('btn-pt');
-  var btnEn = document.getElementById('btn-en');
-  var btnEs = document.getElementById('btn-es');
-  if (btnPt) btnPt.addEventListener('click', function() { setLang('pt'); });
-  if (btnEn) btnEn.addEventListener('click', function() { setLang('en'); });
-  if (btnEs) btnEs.addEventListener('click', function() { setLang('es'); });
-}
+(function() {
+  function bindLangButtons() {
+    var langs = ['pt', 'en', 'es'];
+    langs.forEach(function(l) {
+      var btn = document.getElementById('btn-' + l);
+      if (btn) {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          setLang(l);
+        });
+      }
+    });
+  }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', bindLangButtons);
-} else {
-  bindLangButtons();
-}
+  function tryBind(attempts) {
+    var btn = document.getElementById('btn-pt');
+    if (btn) {
+      bindLangButtons();
+    } else if (attempts > 0) {
+      setTimeout(function() { tryBind(attempts - 1); }, 100);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { tryBind(10); });
+  } else {
+    tryBind(10);
+  }
+})();
 <\/script>`;
 }
 
 async function showResult(html) {
   let wv = new WebView()
-  await wv.loadHTML(html)
+  await wv.loadHTML(html, "http://localhost")
   Speech.speak(S.done)
   await wait(1200)
   await wv.present(false)
