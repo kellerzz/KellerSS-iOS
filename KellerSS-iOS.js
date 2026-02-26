@@ -329,7 +329,7 @@ const FIELDS = "status,country,city,isp,org,hosting,proxy,query,reverse,as"
 
 async function lookupBatch(targets) {
   try {
-    let req = new Request(`http:
+    let req = new Request(`http://ip-api.com/batch?fields=${FIELDS}`)
     req.method = "POST"
     req.body = Data.fromString(JSON.stringify(targets))
     req.headers = { "Content-Type": "application/json" }
@@ -449,7 +449,7 @@ async function probeHost(domain) {
 
   for (let scheme of ["https", "http"]) {
     try {
-      let req = new Request(`${scheme}:
+      let req = new Request(`${scheme}://${domain}`)
       req.timeoutInterval = 6
       req.allowInsecureRequest = true
       let body = await req.loadString()
