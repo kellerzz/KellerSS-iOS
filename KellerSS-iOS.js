@@ -785,13 +785,13 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
     criticalCards += `
     <div class="card critical">
       <div class="card-header">
-        <span class="badge critical">&#9888; CRÍTICO — CHEAT CONFIRMADO</span>
+        <span class="badge critical" data-badge-type="known-cheat">&#9888; CRÍTICO — CHEAT CONFIRMADO</span>
         <span class="conns">${k.hits} conexões</span>
       </div>
       <div class="card-domain">${k.indicator}</div>
       <div class="grid">
-        <div class="row"><span class="label">Cheat</span><span class="val reason" style="color:#ff4444;font-weight:bold">${k.desc}</span></div>
-        <div class="row"><span class="label">Indicador</span><span class="val">${k.indicator.includes(".") && !k.indicator.match(/^\d+\.\d+/) ? "Domínio" : "IP"} detectado no relatório de rede</span></div>
+        <div class="row"><span class="label" data-i18n="labelCheat">Cheat</span><span class="val reason" style="color:#ff4444;font-weight:bold">${k.desc}</span></div>
+        <div class="row"><span class="label" data-i18n="labelIndicator">Indicador</span><span class="val" data-i18n-indicator="${k.indicator.includes(".") && !k.indicator.match(/^\d+\.\d+/) ? "domain" : "ip"}">${k.indicator.includes(".") && !k.indicator.match(/^\d+\.\d+/) ? "Domínio" : "IP"} detectado no relatório de rede</span></div>
         ${bundleList ? `<div class="row"><span class="label">Usado por</span><span class="val">${bundleList}</span></div>` : ""}
       </div>
     </div>`
@@ -803,7 +803,7 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
     let suspectRows = suspectDomains.map(d => {
       let match = findings.find(f2 => f2.domain === d)
       let info = match ? ` &mdash; ${match.isp} (${match.country})` : ""
-      return `<div class="domain-row"><span class="domain-badge ${match ? match.severity.toLowerCase() : ""}">${match ? (match.severity === "HIGH" ? "SUSPEITO" : "POSSÍVEL") : ""}</span> ${d}${info}</div>`
+      return `<div class="domain-row"><span class="domain-badge ${match ? match.severity.toLowerCase() : ""}" data-sev="${match ? match.severity : ""}">${match ? (match.severity === "HIGH" ? "SUSPEITO" : "POSSÍVEL") : ""}</span> ${d}${info}</div>`
     }).join("")
     criticalCards += `
     <div class="card critical">
@@ -842,8 +842,8 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
         <div class="card-domain">${f.domain}</div>
         <div class="grid">
           <div class="row"><span class="label">IP</span><span class="val">${f.ip}</span></div>
-          <div class="row"><span class="label">País</span><span class="val">${f.country} / ${f.city}</span></div>
-          <div class="row"><span class="label">Provedor</span><span class="val isp">${f.isp}</span></div>
+          <div class="row"><span class="label" data-i18n="labelCountry">País</span><span class="val">${f.country} / ${f.city}</span></div>
+          <div class="row"><span class="label" data-i18n="labelProvider">Provedor</span><span class="val isp">${f.isp}</span></div>
           <div class="row"><span class="label">Org</span><span class="val">${f.org}</span></div>
           ${f.reverse ? `<div class="row"><span class="label">rDNS</span><span class="val rdns">${f.reverse}</span></div>` : ""}
           ${f.probe ? `<div class="row"><span class="label">HTTP</span><span class="val">
@@ -852,8 +852,8 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
               : `<span class="http-off">&#9679; Offline / Sem resposta</span>`
             }
           </span></div>` : ""}
-          <div class="row"><span class="label">Motivo</span><span class="val reason">${f.reasons.join("<br>")}</span></div>
-          <div class="row"><span class="label">Usado por</span><span class="val">${bundleList}</span></div>
+          <div class="row"><span class="label" data-i18n="labelReason">Motivo</span><span class="val reason" data-reasons='${JSON.stringify(f.reasons)}'>${f.reasons.join("<br>")}</span></div>
+          <div class="row"><span class="label" data-i18n="labelUsedBy">Usado por</span><span class="val">${bundleList}</span></div>
         </div>
       </div>`
     }
@@ -862,7 +862,7 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
   let uptimeBg    = uptimeWarning ? "background:linear-gradient(90deg,#2a1000,#1a0800)" : "background:#0d1b2a"
   let uptimeDotCl = uptimeWarning ? "background:#ff8800;box-shadow:0 0 6px #ff8800" : "background:#4caf50;box-shadow:0 0 6px #4caf50"
   let uptimeWarnBadge = uptimeWarning
-    ? `<span style="margin-left:8px;background:#3a1800;color:#ff8800;border:1px solid #ff8800;font-size:9px;padding:2px 7px;border-radius:10px;font-weight:bold">&#9888; MENOS DE 20MIN — Relatório pode não cobrir a partida inteira!</span>`
+    ? `<span style="margin-left:8px;background:#3a1800;color:#ff8800;border:1px solid #ff8800;font-size:9px;padding:2px 7px;border-radius:10px;font-weight:bold" data-i18n="uptimeLess20">&#9888; MENOS DE 20MIN — Relatório pode não cobrir a partida inteira!</span>`
     : ""
 
   let rootsWarn = ""
@@ -871,9 +871,9 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
   <div class="roots-banner">
     <div class="roots-icon">🔐</div>
     <div>
-      <div class="roots-label">Certificado Raiz Suspeito</div>
-      <div class="roots-detail">${ipsMeta.rootsInstalled} certificado${ipsMeta.rootsInstalled > 1 ? "s" : ""} raiz instalado${ipsMeta.rootsInstalled > 1 ? "s" : ""} (roots_installed: ${ipsMeta.rootsInstalled})</div>
-      <div class="roots-hint">Certificados raiz permitem interceptar tráfego HTTPS — padrão de proxy cheat tipo mitmproxy</div>
+      <div class="roots-label" data-i18n="rootsLabel">Certificado Raiz Suspeito</div>
+      <div class="roots-detail" data-roots-count="${ipsMeta.rootsInstalled}">${ipsMeta.rootsInstalled} certificado${ipsMeta.rootsInstalled > 1 ? "s" : ""} raiz instalado${ipsMeta.rootsInstalled > 1 ? "s" : ""} (roots_installed: ${ipsMeta.rootsInstalled})</div>
+      <div class="roots-hint" data-i18n="rootsHint">Certificados raiz permitem interceptar tráfego HTTPS — padrão de proxy cheat tipo mitmproxy</div>
     </div>
   </div>`
   }
@@ -884,11 +884,11 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
       <div class="ips-row">
         <div class="ips-row-left">
           <span class="ips-bundle">${f.bundleId}</span>
-          <span class="ips-reason">${f.reason}</span>
+          <span class="ips-reason" data-reason-key="${encodeURIComponent(f.bundleId)}">${f.reason}</span>
         </div>
         <div class="ips-row-right">
           <span class="ips-version">v${f.version}</span>
-          <span class="ips-badge ${f.eventType === 'launches' ? 'launched' : 'installed'}">${f.eventType === 'launches' ? '▶ Aberto' : '⬇ Instalado'}</span>
+          <span class="ips-badge ${f.eventType === 'launches' ? 'launched' : 'installed'}" data-i18n="${f.eventType === 'launches' ? 'ipsLaunched' : 'ipsInstalled'}">${f.eventType === 'launches' ? '▶ Aberto' : '⬇ Instalado'}</span>
         </div>
       </div>`).join("")
 
@@ -897,13 +897,13 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
     <div class="ips-header">
       <span class="ips-icon">📲</span>
       <div class="ips-header-text">
-        <div class="ips-title">Apps Suspeitos Instalados</div>
-        <div class="ips-sub">Detectados no histórico de uso do dispositivo</div>
+        <div class="ips-title" data-i18n="ipsTitle">Apps Suspeitos Instalados</div>
+        <div class="ips-sub" data-i18n="ipsSub">Detectados no histórico de uso do dispositivo</div>
       </div>
       <span class="ips-count">${ipsFindings.length}</span>
     </div>
     <div class="ips-rows">${ipsRows}</div>
-    <div class="ips-hint">⚠ Apps encontrados nos dados de análise do iPhone — indicam presença de ferramentas de cheat/jailbreak/proxy</div>
+    <div class="ips-hint" data-i18n="ipsHint">⚠ Apps encontrados nos dados de análise do iPhone — indicam presença de ferramentas de cheat/jailbreak/proxy</div>
   </div>`
   }
 
@@ -1304,11 +1304,11 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
       <div class="hg-val">${netEntries.length}</div>
     </div>
     ${ipsMeta && ipsMeta.iosVersion ? `<div class="hg-card${ipsMeta.rootsInstalled > 0 ? "" : " hg-card-full"}">
-      <div class="hg-label">Versão iOS</div>
+      <div class="hg-label" data-i18n="iosVersionLabel">Versão iOS</div>
       <div class="hg-val cyan">${ipsMeta.iosVersion}</div>
     </div>` : ""}
     ${ipsMeta && ipsMeta.rootsInstalled > 0 ? `<div class="hg-card hg-card-warn">
-      <div class="hg-label">⚠ Certificados raiz</div>
+      <div class="hg-label" data-i18n="rootsCardLabel">⚠ Certificados raiz</div>
       <div class="hg-val warn">${ipsMeta.rootsInstalled} instalado${ipsMeta.rootsInstalled > 1 ? "s" : ""}</div>
     </div>` : ""}
   </div>
@@ -1449,6 +1449,32 @@ var TRANSLATIONS = {
     lastRecord2: "Último registro:",
     conns: "conexões",
     domains: "domínios",
+    labelCheat: "Cheat",
+    labelIndicator: "Indicador",
+    indicatorDomain: "Domínio detectado no relatório de rede",
+    indicatorIP: "IP detectado no relatório de rede",
+    iosVersionLabel: "Versão iOS",
+    rootsCardLabel: "⚠ Certificados raiz",
+    rootsLabel: "Certificado Raiz Suspeito",
+    rootsDetail1: "certificado raiz instalado",
+    rootsDetailN: "certificados raiz instalados",
+    rootsHint: "Certificados raiz permitem interceptar tráfego HTTPS — padrão de proxy cheat tipo mitmproxy",
+    ipsTitle: "Apps Suspeitos Instalados",
+    ipsSub: "Detectados no histórico de uso do dispositivo",
+    ipsHint: "⚠ Apps encontrados nos dados de análise do iPhone — indicam presença de ferramentas de cheat/jailbreak/proxy",
+    ipsLaunched: "▶ Aberto",
+    ipsInstalled: "⬇ Instalado",
+    badgeKnownCheat: "⚠ CRÍTICO — CHEAT CONFIRMADO",
+    reasonTLD: function(tld){ return "TLD suspeito detectado: \"" + tld + "\" — padrão comum em cheats/proxies"; },
+    reasonWord: function(word){ return "Palavra suspeita no domínio: \"" + word + "\""; },
+    reasonVPS: function(isp){ return "VPS/HOSTING — ISP: " + isp; },
+    reasonProxy: "PROXY / VPN detectado",
+    reasonCF: function(asn){ return "Cloudflare acessado via IP direto — padrão de proxy cheat (" + asn + ")"; },
+    reasonASN: function(asn,desc){ return "ASN de cheat proxy conhecido: " + asn + " — " + desc; },
+    reasonRDNS: function(rdns){ return "rDNS de servidor: " + rdns; },
+    reasonHostinger: function(rdns){ return "Hostinger VPS (padrao cheat proxy BR): " + rdns; },
+    reasonNoRDNS: "Sem rDNS (PTR) — tipico de VPS usado como proxy",
+    reasonOrg: function(kw){ return "Org/ISP associado a hospedagem/cheat proxy: " + kw; },
   },
   en: {
     eyebrow: "iOS Scanner",
@@ -1500,6 +1526,32 @@ var TRANSLATIONS = {
     lastRecord2: "Last record:",
     conns: "connections",
     domains: "domains",
+    labelCheat: "Cheat",
+    labelIndicator: "Indicator",
+    indicatorDomain: "Domain detected in network report",
+    indicatorIP: "IP detected in network report",
+    iosVersionLabel: "iOS Version",
+    rootsCardLabel: "⚠ Root certificates",
+    rootsLabel: "Suspicious Root Certificate",
+    rootsDetail1: "root certificate installed",
+    rootsDetailN: "root certificates installed",
+    rootsHint: "Root certificates allow HTTPS traffic interception — common pattern in mitmproxy-type cheat tools",
+    ipsTitle: "Suspicious Apps Installed",
+    ipsSub: "Detected in device usage history",
+    ipsHint: "⚠ Apps found in iPhone analytics data — indicate presence of cheat/jailbreak/proxy tools",
+    ipsLaunched: "▶ Opened",
+    ipsInstalled: "⬇ Installed",
+    badgeKnownCheat: "⚠ CRITICAL — CONFIRMED CHEAT",
+    reasonTLD: function(tld){ return "Suspicious TLD detected: \"" + tld + "\" — common pattern in cheats/proxies"; },
+    reasonWord: function(word){ return "Suspicious word in domain: \"" + word + "\""; },
+    reasonVPS: function(isp){ return "VPS/HOSTING — ISP: " + isp; },
+    reasonProxy: "PROXY / VPN detected",
+    reasonCF: function(asn){ return "Cloudflare accessed via direct IP — cheat proxy pattern (" + asn + ")"; },
+    reasonASN: function(asn,desc){ return "Known cheat proxy ASN: " + asn + " — " + desc; },
+    reasonRDNS: function(rdns){ return "Server rDNS: " + rdns; },
+    reasonHostinger: function(rdns){ return "Hostinger VPS (known BR cheat proxy pattern): " + rdns; },
+    reasonNoRDNS: "No rDNS (PTR) — typical of VPS used as proxy",
+    reasonOrg: function(kw){ return "Org/ISP associated with hosting/cheat proxy: " + kw; },
   },
   es: {
     eyebrow: "Scanner iOS",
@@ -1551,6 +1603,32 @@ var TRANSLATIONS = {
     lastRecord2: "Último registro:",
     conns: "conexiones",
     domains: "dominios",
+    labelCheat: "Cheat",
+    labelIndicator: "Indicador",
+    indicatorDomain: "Dominio detectado en el informe de red",
+    indicatorIP: "IP detectada en el informe de red",
+    iosVersionLabel: "Versión iOS",
+    rootsCardLabel: "⚠ Certificados raíz",
+    rootsLabel: "Certificado Raíz Sospechoso",
+    rootsDetail1: "certificado raíz instalado",
+    rootsDetailN: "certificados raíz instalados",
+    rootsHint: "Los certificados raíz permiten interceptar tráfico HTTPS — patrón común en cheats tipo mitmproxy",
+    ipsTitle: "Apps Sospechosas Instaladas",
+    ipsSub: "Detectadas en el historial de uso del dispositivo",
+    ipsHint: "⚠ Apps encontradas en los datos de análisis del iPhone — indican presencia de herramientas de cheat/jailbreak/proxy",
+    ipsLaunched: "▶ Abierta",
+    ipsInstalled: "⬇ Instalada",
+    badgeKnownCheat: "⚠ CRÍTICO — CHEAT CONFIRMADO",
+    reasonTLD: function(tld){ return "TLD sospechoso detectado: \"" + tld + "\" — patrón común en cheats/proxies"; },
+    reasonWord: function(word){ return "Palabra sospechosa en el dominio: \"" + word + "\""; },
+    reasonVPS: function(isp){ return "VPS/HOSTING — ISP: " + isp; },
+    reasonProxy: "PROXY / VPN detectado",
+    reasonCF: function(asn){ return "Cloudflare accedido vía IP directa — patrón de proxy cheat (" + asn + ")"; },
+    reasonASN: function(asn,desc){ return "ASN de proxy cheat conocido: " + asn + " — " + desc; },
+    reasonRDNS: function(rdns){ return "rDNS de servidor: " + rdns; },
+    reasonHostinger: function(rdns){ return "Hostinger VPS (patrón proxy cheat BR conocido): " + rdns; },
+    reasonNoRDNS: "Sin rDNS (PTR) — típico de VPS usado como proxy",
+    reasonOrg: function(kw){ return "Org/ISP asociado a hosting/proxy cheat: " + kw; },
   }
 };
 
@@ -1572,6 +1650,55 @@ function setLang(lang) {
   var hgLabels = q('.hg-label');
   ['start','lastRecord','uniqueDomains','totalConns'].forEach(function(k,i){
     if (hgLabels[i]) hgLabels[i].textContent = t[k];
+  });
+
+  // data-i18n generic handler
+  q('[data-i18n]').forEach(function(el){
+    var key = el.getAttribute('data-i18n');
+    if (t[key] && typeof t[key] === 'string') el.textContent = t[key];
+  });
+
+  // indicator value (domain vs IP)
+  q('[data-i18n-indicator]').forEach(function(el){
+    var kind = el.getAttribute('data-i18n-indicator');
+    el.textContent = kind === 'domain' ? t.indicatorDomain : t.indicatorIP;
+  });
+
+  // roots-detail with count
+  q('[data-roots-count]').forEach(function(el){
+    var n = parseInt(el.getAttribute('data-roots-count'), 10);
+    var label = n > 1 ? t.rootsDetailN : t.rootsDetail1;
+    el.textContent = n + ' ' + label + ' (roots_installed: ' + n + ')';
+  });
+
+  // domain-badge inline SUSPEITO/POSSÍVEL
+  q('[data-sev]').forEach(function(el){
+    var sev = el.getAttribute('data-sev');
+    if (sev === 'HIGH') el.textContent = t.badgeSuspect;
+    else if (sev === 'MEDIUM') el.textContent = t.badgePossible;
+  });
+
+  // reasons translation via data-reasons
+  q('[data-reasons]').forEach(function(el){
+    try {
+      var reasons = JSON.parse(el.getAttribute('data-reasons'));
+      var translated = reasons.map(function(r) {
+        // match each reason pattern and translate
+        var m;
+        if ((m = r.match(/TLD suspeito detectado: "([^"]+)"/)) || (m = r.match(/Suspicious TLD detected: "([^"]+)"/)) || (m = r.match(/TLD sospechoso detectado: "([^"]+)"/))) return t.reasonTLD(m[1]);
+        if ((m = r.match(/Palavra suspeita no domínio: "([^"]+)"/)) || (m = r.match(/Suspicious word in domain: "([^"]+)"/)) || (m = r.match(/Palabra sospechosa en el dominio: "([^"]+)"/))) return t.reasonWord(m[1]);
+        if ((m = r.match(/VPS\/HOSTING — ISP: (.+)/))) return t.reasonVPS(m[1]);
+        if (r.match(/PROXY \/ VPN/)) return t.reasonProxy;
+        if ((m = r.match(/Cloudflare[^(]+\((\w+)\)/))) return t.reasonCF(m[1]);
+        if ((m = r.match(/ASN[^:]+: (\w+) — (.+)/))) return t.reasonASN(m[1], m[2]);
+        if ((m = r.match(/Hostinger VPS[^:]+: (.+)/))) return t.reasonHostinger(m[1]);
+        if ((m = r.match(/rDNS de servidor: (.+)/) || r.match(/Server rDNS: (.+)/))) return t.reasonRDNS(m[1]);
+        if (r.match(/Sem rDNS|No rDNS|Sin rDNS/)) return t.reasonNoRDNS;
+        if ((m = r.match(/Org\/ISP[^:]+: (.+)/) || r.match(/Org\/ISP[^:]+: (.+)/))) return t.reasonOrg(m[1]);
+        return r; // fallback: keep original
+      });
+      el.innerHTML = translated.join('<br>');
+    } catch(e) {}
   });
 
   q('.uptime-text').forEach(function(el){
@@ -1646,14 +1773,16 @@ function setLang(lang) {
 
   var labelMap = {
     'IP': 'labelIP',
-    'País': 'labelCountry', 'Country': 'labelCountry',
+    'País': 'labelCountry', 'Country': 'labelCountry', 'País': 'labelCountry',
     'Provedor': 'labelProvider', 'Provider': 'labelProvider', 'Proveedor': 'labelProvider',
     'Org': 'labelOrg',
     'rDNS': 'labelRDNS',
     'HTTP': 'labelHTTP',
-    'Motivo': 'labelReason', 'Reason': 'labelReason',
-    'Usado por': 'labelUsedBy', 'Used by': 'labelUsedBy',
+    'Motivo': 'labelReason', 'Reason': 'labelReason', 'Motivo': 'labelReason',
+    'Usado por': 'labelUsedBy', 'Used by': 'labelUsedBy', 'Usado por': 'labelUsedBy',
     'App': 'labelApp',
+    'Cheat': 'labelCheat',
+    'Indicador': 'labelIndicator', 'Indicator': 'labelIndicator',
   };
 
   q('.card').forEach(function(card){
@@ -1664,7 +1793,9 @@ function setLang(lang) {
       if (num) connsEl.textContent = num[0] + ' ' + t.conns;
     }
     if (badge) {
-      if (badge.classList.contains('critical')) badge.innerHTML = t.badgeCritical;
+      if (badge.classList.contains('critical')) {
+        badge.innerHTML = badge.getAttribute('data-badge-type') === 'known-cheat' ? t.badgeKnownCheat : t.badgeCritical;
+      }
       else if (badge.classList.contains('tld-flag')) badge.innerHTML = t.badgeDomainSuspect;
       else if (badge.classList.contains('high')) badge.textContent = t.badgeSuspect;
       else if (badge.classList.contains('medium')) badge.textContent = t.badgePossible;
