@@ -1837,4 +1837,4 @@ async function main() {
   await showResult(html)
 }
 
-if (typeof module !== 'undefined') module.exports = { main }
+main()
