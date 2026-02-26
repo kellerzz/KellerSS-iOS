@@ -106,7 +106,7 @@ Contribuições são bem vindas! Por favor me chame no privado do discord `kelle
 Um grande agradecimento aos membros abaixo por seu trabalho incrível e contribuições:
 
 <div style="text-align:; font-weight: bold; margin-bottom: 10px;">
-  ㅤKellerㅤㅤㅤKatiauㅤㅤㅤSamir
+  ㅤKellerㅤㅤㅤKatiauㅤ Samir
 </div>
 
 <table>
@@ -123,7 +123,7 @@ Um grande agradecimento aos membros abaixo por seu trabalho incrível e contribu
     </td>
     <td style="text-align: center;">
       <a href="https://discord.gg/allianceoficial">
-        <img src="https://i.imgur.com/8BUhE5T.jpeg" alt="Samir" style="width: 50px; height: 50px;">
+        <img src="https://i.imgur.com/OWo75s4.png" alt="Samir" style="width: 50px; height: 50px;">
       </a>
     </td>
   </tr>
