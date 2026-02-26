@@ -1017,6 +1017,7 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
   .hg-val.cyan   { color:#00e5ff; font-weight:bold; font-size:14px; }
   .hg-val.warn   { color:#ff8800; font-weight:bold; font-size:13px; }
   .hg-card-warn  { background:#1a0a00 !important; border-color:#ff880055 !important; }
+  .hg-card-full  { grid-column: 1 / -1; }
 
   /* LANGUAGE SELECTOR */
   .lang-bar {
@@ -1302,7 +1303,7 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
       <div class="hg-label">Total conexões</div>
       <div class="hg-val">${netEntries.length}</div>
     </div>
-    ${ipsMeta && ipsMeta.iosVersion ? `<div class="hg-card">
+    ${ipsMeta && ipsMeta.iosVersion ? `<div class="hg-card${ipsMeta.rootsInstalled > 0 ? "" : " hg-card-full"}">
       <div class="hg-label">Versão iOS</div>
       <div class="hg-val cyan">${ipsMeta.iosVersion}</div>
     </div>` : ""}
@@ -1831,6 +1832,13 @@ async function main() {
   }
 
   let filename = (ndjsonPath || "arquivo").split("/").pop()
+
+  let processingAlert = new Alert()
+  processingAlert.title = "⏳ Analisando..."
+  processingAlert.message = "O script está processando os dados.\n\nEste processo pode levar alguns segundos — aguarde até o relatório aparecer."
+  processingAlert.addAction("OK, aguardando")
+  processingAlert.present()
+
   let { findings, netEntries, cheatAppFindings, knownCheatFindings } = await analyze(entries)
 
   let html = buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ipsFindings, ipsMeta, filename)
