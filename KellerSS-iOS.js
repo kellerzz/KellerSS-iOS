@@ -1311,9 +1311,9 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
   <div class="hero-name">Keller<span>SS</span></div>
   <div class="hero-credits">por <span class="credit-name">Keller</span> &middot; <span class="credit-name">Samir</span> &middot; <span class="credit-name">Katiau</span></div>
   <div class="lang-bar">
-    <button class="lang-btn active" onclick="setLang('pt')" id="btn-pt">PT-BR</button>
-    <button class="lang-btn" onclick="setLang('en')" id="btn-en">EN</button>
-    <button class="lang-btn" onclick="setLang('es')" id="btn-es">ES</button>
+    <button class="lang-btn active" id="btn-pt">PT-BR</button>
+    <button class="lang-btn" id="btn-en">EN</button>
+    <button class="lang-btn" id="btn-es">ES</button>
   </div>
   <div class="hero-file"><strong>Arquivo:</strong> ${filename}</div>
   <div class="hero-grid">
@@ -1854,6 +1854,21 @@ function setLang(lang) {
   });
 }
 window.setLang = setLang;
+
+function bindLangButtons() {
+  var btnPt = document.getElementById('btn-pt');
+  var btnEn = document.getElementById('btn-en');
+  var btnEs = document.getElementById('btn-es');
+  if (btnPt) btnPt.addEventListener('click', function() { setLang('pt'); });
+  if (btnEn) btnEn.addEventListener('click', function() { setLang('en'); });
+  if (btnEs) btnEs.addEventListener('click', function() { setLang('es'); });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bindLangButtons);
+} else {
+  bindLangButtons();
+}
 <\/script>`;
 }
 
