@@ -1832,25 +1832,20 @@ function setLang(lang) {
 }
 window.setLang = setLang;
 
-document.addEventListener('DOMContentLoaded', function() {
+(function() {
   var langs = ['pt','en','es'];
   langs.forEach(function(l) {
     var btn = document.getElementById('btn-' + l);
     if (btn) btn.addEventListener('click', function() { setLang(l); });
   });
-
-  if (window.speechSynthesis) {
-    var utter = new SpeechSynthesisUtterance('KellerSS finalizado. Analise os resultados com cuidado.');
-    utter.lang = 'pt-BR';
-    window.speechSynthesis.speak(utter);
-  }
-});
+})();
 <\/script>`;
 }
 
 async function showResult(html) {
   let wv = new WebView()
   await wv.loadHTML(html)
+  Speech.speak("KellerSS finalizado. Analise os resultados com cuidado.")
   await wv.present(false)
 }
 
