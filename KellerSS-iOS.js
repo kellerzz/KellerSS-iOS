@@ -417,13 +417,6 @@ async function analyze(entries) {
   // (isso é feito depois do lookup, mas registramos o domínio para referência cruzada)
   knownCheatFindings = knownCheatFindings.map(k => ({ ...k, bundles: [...k.bundles] }))
 
-  const FF_BUNDLES_A = ["com.dts.freefiremax", "com.dts.freefireth"]
-  let ffLoginEntries = netEntries
-    .filter(e => FF_BUNDLES_A.includes(e.bundleID) && e.domain === "loginbp.ggpolarbear.com" && e.timeStamp)
-    .sort((a, b) => b.timeStamp.localeCompare(a.timeStamp))
-  let ffLoginTs = ffLoginEntries.length ? new Date(ffLoginEntries[0].timeStamp) : null
-  if (ffLoginTs) console.log(`Free Fire último login: ${ffLoginTs.toISOString()}`)
-
   const CHUNK = 100
   let candidates = []
 
@@ -523,14 +516,14 @@ async function analyze(entries) {
     return b.hits - a.hits
   })
 
-  return { findings, netEntries, cheatAppFindings, knownCheatFindings, ffLoginTs }
+  return { findings, netEntries, cheatAppFindings, knownCheatFindings }
 }
 
 function wait(ms) {
   return new Promise(resolve => Timer.schedule(ms, false, resolve))
 }
 
-function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ffLoginTs, filename) {
+function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, filename) {
   let allDomains = new Set(netEntries.map(e => e.domain || ""))
 
   let allTimestamps = netEntries.map(e => e.timeStamp).filter(Boolean).sort()
@@ -594,16 +587,6 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
 
   const FF_BUNDLES = ["com.dts.freefiremax", "com.dts.freefireth"]
 
-  // Garena = sempre Convidado, prioridade máxima
-  const FF_GARENA_DOMAINS = new Set([
-    "loginbp.ggpolarbear.com",
-    "100067.connect.garena.com",
-    "100067.msdk.garena.com",
-    "gin.freefiremobile.com",
-    "sdk.open.api.igamecorp.com",
-  ])
-
-  // Logins secundários — só valem se Garena NÃO estiver presente na sessão
   const FF_SECONDARY_DOMAINS = {
     "facebook.com":          "Login Facebook",
     "graph.facebook.com":    "Login Facebook",
@@ -632,24 +615,18 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
   }
   if (_cur.length > 0) ffSessionGroups.push(_cur)
 
-  // Para cada sessão, determinar o tipo de login com prioridade: Garena > Secundário > Fallback
+  // Para cada sessão, determinar o tipo de login (Facebook, Twitter, Gmail, VK)
   function resolveSession(group) {
     let domains = new Set(group.map(e => e.domain))
     let anchor  = group[group.length - 1]
 
-    // 1. Garena presente → Convidado, sem discussão
-    for (let d of domains) {
-      if (FF_GARENA_DOMAINS.has(d)) {
-        return { ts: anchor.timeStamp, loginType: "Login Convidado (Garena)", bundleID: anchor.bundleID }
-      }
-    }
-    // 2. Login secundário
     for (let d of domains) {
       if (FF_SECONDARY_DOMAINS[d]) {
         return { ts: anchor.timeStamp, loginType: FF_SECONDARY_DOMAINS[d], bundleID: anchor.bundleID }
       }
     }
-    // 3. Sem tipo de login identificável → ignorar sessão
+
+    // Sem login identificável → ignorar sessão
     return null
   }
 
@@ -666,43 +643,9 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
     ? (ffAll[0].bundleID === "com.dts.freefiremax" ? "Free Fire MAX" : "Free Fire")
     : null
 
-  let displayFindingsForCount = ffLoginTs && findings.length > 0
-    ? (() => {
-        let preSet = new Set()
-        return findings
-      })()
-    : findings
   let highCount = findings.filter(f => f.severity === "HIGH").length
   let medCount  = findings.filter(f => f.severity === "MEDIUM").length
   let criticalCount = cheatAppFindings.length + knownCheatFindings.length
-
-  let preLoginFindings = []
-  let preLoginWarning = false
-  if (ffLoginTs) {
-    for (let f of findings) {
-      let preEntries = netEntries.filter(e =>
-        (e.domain === f.domain) &&
-        e.timeStamp &&
-        new Date(e.timeStamp) < ffLoginTs
-      )
-      if (preEntries.length > 0) {
-        let earliest = preEntries.sort((a,b) => a.timeStamp.localeCompare(b.timeStamp))[0]
-        let diffMs = ffLoginTs - new Date(earliest.timeStamp)
-        let diffMin = Math.floor(diffMs / 60000)
-        preLoginFindings.push({
-          domain: f.domain,
-          ip: f.ip,
-          isp: f.isp,
-          hits: preEntries.length,
-          earliestTs: fmtDt(new Date(earliest.timeStamp)),
-          minutesBefore: diffMin,
-          severity: f.severity,
-        })
-        preLoginWarning = true
-      }
-    }
-    preLoginFindings.sort((a, b) => a.minutesBefore - b.minutesBefore)
-  }
 
   let criticalCards = ""
 
@@ -750,10 +693,6 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
   }
 
   let displayFindings = findings
-  if (ffLoginTs && preLoginFindings.length > 0) {
-    let preLoginDomains = new Set(preLoginFindings.map(p => p.domain))
-    displayFindings = findings.filter(f => preLoginDomains.has(f.domain))
-  }
 
   let cards = ""
   if (displayFindings.length === 0) {
@@ -812,7 +751,6 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
     if (type.includes("Twitter") || type.includes("X")) return "#1da1f2"
     if (type.includes("Gmail"))     return "#ea4335"
     if (type.includes("VK"))        return "#4a76a8"
-    if (type.includes("Convidado")) return "#888"
     return "#556"
   }
 
@@ -1574,8 +1512,8 @@ async function main() {
     return
   }
 
-  let { findings, netEntries, cheatAppFindings, knownCheatFindings, ffLoginTs } = await analyze(entries)
+  let { findings, netEntries, cheatAppFindings, knownCheatFindings } = await analyze(entries)
 
-  let html = buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ffLoginTs, filename)
+  let html = buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, filename)
   await showResult(html)
 }
