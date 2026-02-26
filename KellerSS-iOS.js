@@ -587,10 +587,19 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
 
   const FF_BUNDLES = ["com.dts.freefiremax", "com.dts.freefireth"]
 
+  // Domínios que indicam presença de login FB (podem aparecer em background também)
+  const FF_FB_DOMAINS = new Set([
+    "facebook.com", "graph.facebook.com", "connect.facebook.net", "m.facebook.com",
+  ])
+
+  // CDNs que SÓ aparecem quando a tela de login do Facebook foi realmente renderizada pelo usuário
+  // (carregou assets, foto de perfil, logo) — prova de interação real, não refresh de token em background
+  const FF_FB_CDN_CONFIRM = new Set([
+    "fbcdn.net", "fbsbx.com", "scontent.xx.fbcdn.net", "static.xx.fbcdn.net",
+    "connect.facebook.net",
+  ])
+
   const FF_SECONDARY_DOMAINS = {
-    "facebook.com":          "Login Facebook",
-    "graph.facebook.com":    "Login Facebook",
-    "connect.facebook.net":  "Login Facebook",
     "twitter.com":           "Login Twitter/X",
     "api.twitter.com":       "Login Twitter/X",
     "oauth2.googleapis.com": "Login Gmail",
@@ -620,6 +629,15 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
     let domains = new Set(group.map(e => e.domain))
     let anchor  = group[group.length - 1]
 
+    // Facebook: exige domínio FB + pelo menos um CDN de renderização de UI
+    // graph.facebook.com sozinho = refresh de token em background, não conta
+    let hasFbDomain = [...domains].some(d => FF_FB_DOMAINS.has(d))
+    let hasFbCdn    = [...domains].some(d => FF_FB_CDN_CONFIRM.has(d))
+    if (hasFbDomain && hasFbCdn) {
+      return { ts: anchor.timeStamp, loginType: "Login Facebook", bundleID: anchor.bundleID }
+    }
+
+    // Outros logins (Twitter, Gmail, VK)
     for (let d of domains) {
       if (FF_SECONDARY_DOMAINS[d]) {
         return { ts: anchor.timeStamp, loginType: FF_SECONDARY_DOMAINS[d], bundleID: anchor.bundleID }
