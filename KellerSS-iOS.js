@@ -134,6 +134,12 @@ const FALSE_POSITIVE_IPS = new Set([
   "104.29.155.27",  "104.29.156.120", "104.29.137.112",
 ])
 
+// IPs e domínios confirmados de cheats conhecidos — detecção CRÍTICA direta
+const KNOWN_CHEAT_INFRA = {
+  "46.202.145.85":    "Fatality Cheats — servidor confirmado",
+  "fatalitycheats.xyz": "Fatality Cheats — domínio oficial do cheat",
+}
+
 async function findNdjsonFile() {
   let path = await DocumentPicker.openFile()
   if (!path) return null
@@ -386,6 +392,31 @@ async function analyze(entries) {
     }
   }
 
+  // Detecção direta de infraestrutura conhecida de cheats (IP ou domínio exato)
+  let knownCheatFindings = []
+  for (let e of netEntries) {
+    let d = (e.domain || "").toLowerCase()
+    for (let [indicator, desc] of Object.entries(KNOWN_CHEAT_INFRA)) {
+      if (d === indicator.toLowerCase() || d.endsWith("." + indicator.toLowerCase())) {
+        let existing = knownCheatFindings.find(k => k.indicator === indicator)
+        if (existing) {
+          existing.hits += (e.hits || 1)
+          if (e.bundleID) existing.bundles.add(e.bundleID)
+        } else {
+          knownCheatFindings.push({
+            indicator,
+            desc,
+            hits: e.hits || 1,
+            bundles: new Set(e.bundleID ? [e.bundleID] : []),
+          })
+        }
+      }
+    }
+  }
+  // Também checar se algum IP resolvido bate com os indicadores
+  // (isso é feito depois do lookup, mas registramos o domínio para referência cruzada)
+  knownCheatFindings = knownCheatFindings.map(k => ({ ...k, bundles: [...k.bundles] }))
+
   const FF_BUNDLES_A = ["com.dts.freefiremax", "com.dts.freefireth"]
   let ffLoginEntries = netEntries
     .filter(e => FF_BUNDLES_A.includes(e.bundleID) && e.domain === "loginbp.ggpolarbear.com" && e.timeStamp)
@@ -492,14 +523,14 @@ async function analyze(entries) {
     return b.hits - a.hits
   })
 
-  return { findings, netEntries, cheatAppFindings, ffLoginTs }
+  return { findings, netEntries, cheatAppFindings, knownCheatFindings, ffLoginTs }
 }
 
 function wait(ms) {
   return new Promise(resolve => Timer.schedule(ms, false, resolve))
 }
 
-function buildHTML(findings, netEntries, cheatAppFindings, ffLoginTs, filename) {
+function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ffLoginTs, filename) {
   let allDomains = new Set(netEntries.map(e => e.domain || ""))
 
   let allTimestamps = netEntries.map(e => e.timeStamp).filter(Boolean).sort()
@@ -648,6 +679,7 @@ function buildHTML(findings, netEntries, cheatAppFindings, ffLoginTs, filename) 
     : findings
   let highCount = findings.filter(f => f.severity === "HIGH").length
   let medCount  = findings.filter(f => f.severity === "MEDIUM").length
+  let criticalCount = cheatAppFindings.length + knownCheatFindings.length
 
   let preLoginFindings = []
   let preLoginWarning = false
@@ -678,6 +710,25 @@ function buildHTML(findings, netEntries, cheatAppFindings, ffLoginTs, filename) 
   }
 
   let criticalCards = ""
+
+  // Cards de infraestrutura confirmada de cheats (IP/domínio direto)
+  for (let k of knownCheatFindings) {
+    let bundleList = k.bundles.map(b => `<span class="bundle">${b}</span>`).join(" ")
+    criticalCards += `
+    <div class="card critical">
+      <div class="card-header">
+        <span class="badge critical">&#9888; CRÍTICO — CHEAT CONFIRMADO</span>
+        <span class="conns">${k.hits} conexões</span>
+      </div>
+      <div class="card-domain">${k.indicator}</div>
+      <div class="grid">
+        <div class="row"><span class="label">Cheat</span><span class="val reason" style="color:#ff4444;font-weight:bold">${k.desc}</span></div>
+        <div class="row"><span class="label">Indicador</span><span class="val">${k.indicator.includes(".") && !k.indicator.match(/^\d+\.\d+/) ? "Domínio" : "IP"} detectado no relatório de rede</span></div>
+        ${bundleList ? `<div class="row"><span class="label">Usado por</span><span class="val">${bundleList}</span></div>` : ""}
+      </div>
+    </div>`
+  }
+
   for (let f of cheatAppFindings) {
     let suspectDomainSet = new Set(findings.map(f2 => f2.domain))
     let suspectDomains = f.domains.filter(d => suspectDomainSet.has(d))
@@ -1113,7 +1164,7 @@ function buildHTML(findings, netEntries, cheatAppFindings, ffLoginTs, filename) 
 
   <div class="summary">
     <div class="stat">
-      <div class="num" style="color:#ff00cc">${cheatAppFindings.length}</div>
+      <div class="num" style="color:#ff00cc">${criticalCount}</div>
       <div class="lbl">Crítico</div>
     </div>
     <div class="stat">
@@ -1126,14 +1177,14 @@ function buildHTML(findings, netEntries, cheatAppFindings, ffLoginTs, filename) 
     </div>
   </div>
 
-  ${cheatAppFindings.length > 0 ? `
+  ${criticalCount > 0 ? `
   <div class="section-header sh-critical">
     <div class="sh-icon">&#9888;</div>
     <div class="sh-text">
       <div class="sh-title">Apps Proxy / Cheat Detectados</div>
-      <div class="sh-sub">Aplicativos conhecidos de interceptação de tráfego</div>
+      <div class="sh-sub">Aplicativos e infraestrutura conhecida de cheats</div>
     </div>
-    <div class="sh-count">${cheatAppFindings.length}</div>
+    <div class="sh-count">${criticalCount}</div>
   </div>
   ${criticalCards}
   <div class="divider"></div>` : ""}
@@ -1528,8 +1579,8 @@ async function main() {
     return
   }
 
-  let { findings, netEntries, cheatAppFindings, ffLoginTs } = await analyze(entries)
+  let { findings, netEntries, cheatAppFindings, knownCheatFindings, ffLoginTs } = await analyze(entries)
 
-  let html = buildHTML(findings, netEntries, cheatAppFindings, ffLoginTs, filename)
+  let html = buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ffLoginTs, filename)
   await showResult(html)
 }
