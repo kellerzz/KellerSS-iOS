@@ -1,6 +1,3 @@
-// Variables used by Scriptable.
-// icon-color: red; icon-glyph: shield-alt
-
 const VPS_HOSTING_KEYWORDS = [
   "hostinger", "hstgr",
   "locaweb",
