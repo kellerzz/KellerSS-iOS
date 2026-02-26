@@ -1,3 +1,6 @@
+// Variables used by Scriptable.
+// icon-color: red; icon-glyph: shield-alt
+
 const VPS_HOSTING_KEYWORDS = [
   "hostinger", "hstgr",
   "locaweb",
@@ -1836,3 +1839,5 @@ async function main() {
   let html = buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ipsFindings, ipsMeta, filename)
   await showResult(html)
 }
+
+if (typeof module !== 'undefined') module.exports = { main }
