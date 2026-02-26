@@ -830,7 +830,7 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
   } else {
     for (let f of displayFindings) {
       let tag = f.tldSuspect ? "DOMÍNIO SUSPEITO" : f.hosting ? "VPS/HOSTING" : f.proxy ? "PROXY/VPN" : "NUVEM"
-      let cls = f.tldSuspect ? "tld" : f.severity === "HIGH" ? "high" : "medium"
+      let cls = f.tldSuspect ? "tld-flag" : f.severity === "HIGH" ? "high" : "medium"
       let sev = f.tldSuspect ? "&#9888; DOMÍNIO SUSPEITO" : f.severity === "HIGH" ? "SUSPEITO" : "POSSÍVEL"
       let bundleList = f.bundles.map(b => `<span class="bundle">${b}</span>`).join(" ")
       cards += `
@@ -1106,8 +1106,8 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
     border:1px solid #1a2a3a; border-left:4px solid #333;
   }
   .card.critical { border-left-color:#ff00cc; background:#110016; border-color:#2a0035; }
-  .card.tld      { border-left-color:#ff6600; background:#120a00; border-color:#3a1a00; }
-  .badge.tld     { background:#2a1000; color:#ff6600; border:1px solid #ff660055; }
+  .card.tld-flag { border-left-color:#ff6600; background:#120a00; border-color:#3a1a00; }
+  .badge.tld-flag{ background:#2a1000; color:#ff6600; border:1px solid #ff660055; }
   .card.high     { border-left-color:#ff4444; border-color:#2a0808; }
   .card.medium   { border-left-color:#ffbb00; border-color:#2a2000; }
   .card-header {
@@ -1664,7 +1664,7 @@ function setLang(lang) {
     }
     if (badge) {
       if (badge.classList.contains('critical')) badge.innerHTML = t.badgeCritical;
-      else if (badge.classList.contains('tld')) badge.innerHTML = t.badgeDomainSuspect;
+      else if (badge.classList.contains('tld-flag')) badge.innerHTML = t.badgeDomainSuspect;
       else if (badge.classList.contains('high')) badge.textContent = t.badgeSuspect;
       else if (badge.classList.contains('medium')) badge.textContent = t.badgePossible;
     }
