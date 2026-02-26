@@ -388,7 +388,7 @@ async function analyze(entries) {
 
   const FF_BUNDLES_A = ["com.dts.freefiremax", "com.dts.freefireth"]
   let ffLoginEntries = netEntries
-    .filter(e => FF_BUNDLES_A.includes(e.bundleID) && e.domain === "app-measurement.com" && e.timeStamp)
+    .filter(e => FF_BUNDLES_A.includes(e.bundleID) && e.domain === "loginbp.ggpolarbear.com" && e.timeStamp)
     .sort((a, b) => b.timeStamp.localeCompare(a.timeStamp))
   let ffLoginTs = ffLoginEntries.length ? new Date(ffLoginEntries[0].timeStamp) : null
   if (ffLoginTs) console.log(`Free Fire último login: ${ffLoginTs.toISOString()}`)
