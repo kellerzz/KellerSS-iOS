@@ -826,8 +826,12 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
     letter-spacing:-0.5px; margin-bottom:5px;
   }
   .hero-credits {
-    font-size:10px; color:#1e2c3a; letter-spacing:2px;
-    margin-bottom:18px; font-weight:400;
+    font-size:11px; color:#3a5a72; letter-spacing:2.5px;
+    margin-bottom:18px; font-weight:500;
+  }
+  .hero-credits .credit-name {
+    color:#557a94;
+    transition: color 0.2s;
   }
   .hero-name span { color:#00e5ff; }
   .hero-file {
@@ -1062,7 +1066,7 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, f
 <div class="hero">
   <div class="hero-eyebrow">Detector de Proxy</div>
   <div class="hero-name">Keller<span>SS</span></div>
-  <div class="hero-credits">por Keller &middot; Katiau &middot; Samir</div>
+  <div class="hero-credits">por <span class="credit-name">Keller</span> &middot; <span class="credit-name">Katiau</span> &middot; <span class="credit-name">Samir</span></div>
   <div class="lang-bar">
     <button class="lang-btn active" onclick="setLang('pt')" id="btn-pt">PT-BR</button>
     <button class="lang-btn" onclick="setLang('en')" id="btn-en">EN</button>
