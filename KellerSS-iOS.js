@@ -563,52 +563,82 @@ function buildHTML(findings, netEntries, cheatAppFindings, ffLoginTs, filename) 
 
   const FF_BUNDLES = ["com.dts.freefiremax", "com.dts.freefireth"]
 
-  // Mapa de domínios → tipo de login
-  const FF_LOGIN_DOMAINS = {
-    "facebook.com":              "Login Facebook",
-    "graph.facebook.com":        "Login Facebook",
-    "connect.facebook.net":      "Login Facebook",
-    "twitter.com":               "Login Twitter/X",
-    "api.twitter.com":           "Login Twitter/X",
-    "oauth2.googleapis.com":     "Login Gmail",
-    "accounts.google.com":       "Login Gmail",
-    "apis.google.com":           "Login Gmail",
-    "100067.msdk.garena.com":    "Login Convidado",
-    "sdk.open.api.igamecorp.com":"Login Convidado",
-    "api.vk.com":                "Login VK",
-    "login.vk.com":              "Login VK",
+  // Garena = sempre Convidado, prioridade máxima
+  const FF_GARENA_DOMAINS = new Set([
+    "loginbp.ggpolarbear.com",
+    "100067.connect.garena.com",
+    "100067.msdk.garena.com",
+    "gin.freefiremobile.com",
+    "sdk.open.api.igamecorp.com",
+  ])
+
+  // Logins secundários — só valem se Garena NÃO estiver presente na sessão
+  const FF_SECONDARY_DOMAINS = {
+    "facebook.com":          "Login Facebook",
+    "graph.facebook.com":    "Login Facebook",
+    "connect.facebook.net":  "Login Facebook",
+    "twitter.com":           "Login Twitter/X",
+    "api.twitter.com":       "Login Twitter/X",
+    "oauth2.googleapis.com": "Login Gmail",
+    "accounts.google.com":   "Login Gmail",
+    "apis.google.com":       "Login Gmail",
+    "api.vk.com":            "Login VK",
+    "login.vk.com":          "Login VK",
   }
+
   const FF_FALLBACK_DOMAIN = "app-measurement.com"
 
+  // Agrupa todas as entradas do FF por sessões (gap > 2min = nova sessão)
+  let ffAll = netEntries
+    .filter(e => FF_BUNDLES.includes(e.bundleID) && e.timeStamp)
+    .sort((a, b) => a.timeStamp.localeCompare(b.timeStamp))
 
-  // 1. Buscar primeiro pelos domínios de login específicos (fonte primária)
-  let ffLoginSpecific = netEntries
-    .filter(e => FF_BUNDLES.includes(e.bundleID) && FF_LOGIN_DOMAINS[e.domain] && e.timeStamp)
-    .sort((a, b) => b.timeStamp.localeCompare(a.timeStamp))
+  let ffSessionGroups = []
+  let _cur = []
+  for (let e of ffAll) {
+    if (_cur.length === 0) { _cur.push(e); continue }
+    let gap = new Date(e.timeStamp) - new Date(_cur[_cur.length-1].timeStamp)
+    if (gap > 2 * 60 * 1000) { ffSessionGroups.push(_cur); _cur = [e] }
+    else _cur.push(e)
+  }
+  if (_cur.length > 0) ffSessionGroups.push(_cur)
 
-  // 2. Só usar app-measurement.com se não encontrar NENHUM domínio de login
-  let ffRawSessions
-  if (ffLoginSpecific.length > 0) {
-    ffRawSessions = ffLoginSpecific
-  } else {
-    ffRawSessions = netEntries
-      .filter(e => FF_BUNDLES.includes(e.bundleID) && e.domain === FF_FALLBACK_DOMAIN && e.timeStamp)
-      .sort((a, b) => b.timeStamp.localeCompare(a.timeStamp))
+  // Para cada sessão, determinar o tipo de login com prioridade: Garena > Secundário > Fallback
+  function resolveSession(group) {
+    let domains = new Set(group.map(e => e.domain))
+    let anchor  = group[group.length - 1]
+
+    // 1. Garena presente → Convidado, sem discussão
+    for (let d of domains) {
+      if (FF_GARENA_DOMAINS.has(d)) {
+        return { ts: anchor.timeStamp, loginType: "Login Convidado (Garena)", bundleID: anchor.bundleID }
+      }
+    }
+    // 2. Login secundário
+    for (let d of domains) {
+      if (FF_SECONDARY_DOMAINS[d]) {
+        return { ts: anchor.timeStamp, loginType: FF_SECONDARY_DOMAINS[d], bundleID: anchor.bundleID }
+      }
+    }
+    // 3. Fallback: só se tiver app-measurement (abertura confirmada do app)
+    if (domains.has(FF_FALLBACK_DOMAIN)) {
+      return { ts: anchor.timeStamp, loginType: "Login Desconhecido", bundleID: anchor.bundleID }
+    }
+    return null
   }
 
-  // Montar sessões (máx 3 últimas) — se veio de login específico, tipo já é conhecido
-  let ffSessions = ffRawSessions.slice(0, 3).map(e => ({
-    ts:        fmtDt(new Date(e.timeStamp)),
-    rawTs:     e.timeStamp,
-    loginType: FF_LOGIN_DOMAINS[e.domain] || "Login Desconhecido",
-    bundleID:  e.bundleID,
-  }))
+  let ffSessions = ffSessionGroups
+    .map(resolveSession)
+    .filter(Boolean)
+    .sort((a, b) => b.ts.localeCompare(a.ts))
+    .slice(0, 3)
+    .map(s => ({ ...s, ts: fmtDt(new Date(s.ts)) }))
 
-  let ffVersion  = ffRawSessions.length > 0
-    ? (ffRawSessions[0].bundleID === "com.dts.freefiremax" ? "Free Fire MAX" : "Free Fire")
+  let ffStr     = ffSessions.length > 0 ? ffSessions[0].ts : null
+  let ffEntries = ffAll
+  let ffVersion = ffAll.length > 0
+    ? (ffAll[0].bundleID === "com.dts.freefiremax" ? "Free Fire MAX" : "Free Fire")
     : null
-  let ffStr      = ffSessions.length > 0 ? ffSessions[0].ts : null
-  let ffEntries  = ffRawSessions  // keep compat with ffEntries.length below
 
   let displayFindingsForCount = ffLoginTs && findings.length > 0
     ? (() => {
