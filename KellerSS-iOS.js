@@ -180,6 +180,11 @@ const SUSPICIOUS_DOMAIN_WORDS = [
   "vpn", "socks", "relay", "forward", "gate",
 ]
 
+const IGNORED_BUNDLES = new Set([
+  "com.hammerandchisel.discord",
+  "com.zhiliaoapp.musically",
+])
+
 const FALSE_POSITIVE_IPS = new Set([
   "104.29.152.79",  "104.29.152.107", "92.223.118.254",  "23.221.214.168",
   "23.192.36.217",  "54.69.69.125",   "104.29.152.189",  "104.29.137.146",
@@ -523,6 +528,7 @@ async function analyze(entries) {
   let domainHits = {}
   let domainBundles = {}
   for (let e of netEntries) {
+    if (IGNORED_BUNDLES.has(e.bundleID)) continue
     let d = e.domain || ""
     if (!d) continue
     domainHits[d] = (domainHits[d] || 0) + (e.hits || 1)
@@ -537,7 +543,7 @@ async function analyze(entries) {
   console.log(`Total dominios unicos: ${allDomains.length}`)
 
   let allBundles = new Set()
-  for (let e of netEntries) { if (e.bundleID) allBundles.add(e.bundleID) }
+  for (let e of netEntries) { if (e.bundleID && !IGNORED_BUNDLES.has(e.bundleID)) allBundles.add(e.bundleID) }
 
   let cheatAppFindings = []
   for (let [bundleID, desc] of Object.entries(CHEAT_APPS)) {
@@ -596,11 +602,18 @@ async function analyze(entries) {
       if (FALSE_POSITIVE_IPS.has(ip) || FALSE_POSITIVE_IPS.has(domain)) continue
 
       let { severity, reasons } = classifyIP(info, domain)
-      if (!severity) continue
 
       let domLow2 = domain.toLowerCase()
       let isTldSuspect = SUSPICIOUS_TLDS.some(t => domLow2.endsWith(t)) ||
                          SUSPICIOUS_DOMAIN_WORDS.some(w => domLow2.split(".")[0].includes(w))
+
+      if (!severity && !isTldSuspect) continue
+
+      if (!severity && isTldSuspect) {
+        severity = "HIGH"
+        reasons = [`TLD suspeito: domínio com extensão de alto risco — padrão comum em servidores de cheat`]
+      }
+
       candidates.push({
         severity, domain, ip,
         country: info.country || "?",
