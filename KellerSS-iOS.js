@@ -359,6 +359,16 @@ function analyzeIps(parsed) {
       }
     }
 
+    if (!reason) {
+      let bidLower = bid.toLowerCase()
+      const FF_LEGIT = ["com.dts.freefireth", "com.dts.freefiremax"]
+      const FF_PREFIXES = ["com.dts.freefireth", "com.dts.freefiremax"]
+      if (!FF_LEGIT.includes(bid) && FF_PREFIXES.some(p => bidLower.startsWith(p) || (bidLower.includes("freefire") && !FF_LEGIT.includes(bid)))) {
+        reason = "Cópia suspeita do Free Fire — bundle ID modificado"
+        category = "critical"
+      }
+    }
+
     if (reason) {
       results.push({
         bundleId:    bid,
@@ -598,6 +608,23 @@ async function analyze(entries) {
   let allBundles = new Set()
   for (let e of netEntries) { if (e.bundleID && !IGNORED_BUNDLES.has(e.bundleID)) allBundles.add(e.bundleID) }
 
+  const FF_LEGIT_BUNDLES = new Set(["com.dts.freefireth", "com.dts.freefiremax"])
+  let ffFakeFindings = []
+  for (let bid of allBundles) {
+    if (FF_LEGIT_BUNDLES.has(bid)) continue
+    let bidLower = bid.toLowerCase()
+    let isFFClone = bidLower.startsWith("com.dts.freefireth") ||
+                    bidLower.startsWith("com.dts.freefiremax") ||
+                    (bidLower.includes("freefire") && !FF_LEGIT_BUNDLES.has(bid)) ||
+                    (bidLower.includes("freefir") && !FF_LEGIT_BUNDLES.has(bid))
+    if (isFFClone) {
+      let appEntries = netEntries.filter(e => e.bundleID === bid)
+      let appHits = appEntries.reduce((s, e) => s + (e.hits || 1), 0)
+      let appDomains = [...new Set(appEntries.map(e => e.domain).filter(Boolean))]
+      ffFakeFindings.push({ bundleID: bid, desc: "Cópia suspeita do Free Fire — bundle ID modificado", hits: appHits, domains: appDomains })
+    }
+  }
+
   let cheatAppFindings = []
   for (let [bundleID, desc] of Object.entries(CHEAT_APPS)) {
     if (allBundles.has(bundleID)) {
@@ -607,6 +634,7 @@ async function analyze(entries) {
       cheatAppFindings.push({ bundleID, desc, hits: appHits, domains: appDomains })
     }
   }
+  cheatAppFindings = [...ffFakeFindings, ...cheatAppFindings]
 
   let knownCheatFindings = []
   for (let e of netEntries) {
