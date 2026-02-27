@@ -180,6 +180,19 @@ const SUSPICIOUS_DOMAIN_WORDS = [
   "vpn", "socks", "relay", "forward", "gate",
 ]
 
+const PROXY_IPA_BUNDLES = {
+  "com.spotify.client":         "Spotify",
+  "com.burbn.instagram":        "Instagram",
+  "net.whatsapp.WhatsApp":      "WhatsApp",
+  "com.google.ios.youtube":     "YouTube",
+  "com.apple.mobilesafari":     "Safari",
+  "com.facebook.Facebook":      "Facebook",
+  "com.zhiliaoapp.musically":   "TikTok",
+  "com.hammerandchisel.discord":"Discord",
+  "com.google.Gmail":           "Gmail",
+  "com.google.GoogleMobile":    "Google",
+}
+
 const IGNORED_BUNDLES = new Set([
   "com.hammerandchisel.discord",
   "com.zhiliaoapp.musically",
@@ -776,7 +789,7 @@ function wait(ms) {
   return new Promise(resolve => Timer.schedule(ms, false, resolve))
 }
 
-function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ipsFindings, ipsMeta, filename) {
+function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ipsFindings, ipsMeta, replaceFindings, filename) {
   let allDomains = new Set(netEntries.map(e => e.domain || ""))
 
   let allTimestamps = netEntries.map(e => e.timeStamp).filter(Boolean).sort()
@@ -898,9 +911,34 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
 
   let highCount = findings.filter(f => f.severity === "HIGH").length
   let medCount  = findings.filter(f => f.severity === "MEDIUM").length
-  let criticalCount = cheatAppFindings.length + knownCheatFindings.length
+  replaceFindings = replaceFindings || []
+  let criticalCount = cheatAppFindings.length + knownCheatFindings.length + replaceFindings.length
 
   let criticalCards = ""
+
+  for (let f of replaceFindings) {
+    let label = f.isProxyApp
+      ? "&#9888; APP DE PROXY DETECTADO"
+      : "&#9888; APP SEM REGISTRO NO DISPOSITIVO"
+    let desc = f.isProxyApp
+      ? `${f.appName} — ativo na rede mas ausente no app_usage. Possível IPA falso instalado via sideload e deletado.`
+      : `${f.appName} — gerou tráfego de rede mas não consta como instalado no arquivo de análise do dispositivo.`
+    let domainRows = f.domains.slice(0, 6).map(d => `<span class="bundle">${d}</span>`).join(" ")
+    let extraDomains = f.domains.length > 6 ? `<span style="color:#888;font-size:10px"> +${f.domains.length - 6} domínios</span>` : ""
+    criticalCards += `
+    <div class="card critical">
+      <div class="card-header">
+        <span class="badge critical" style="${f.isProxyApp ? 'background:#1a0035;color:#ff00cc;border-color:#ff00cc55;' : ''}">${label}</span>
+        <span class="conns">${f.hits} conexões</span>
+      </div>
+      <div class="card-domain">${f.bundleID}</div>
+      <div class="grid">
+        <div class="row"><span class="label">Situação</span><span class="val reason" style="color:#ff44cc;font-weight:bold">${desc}</span></div>
+        <div class="row"><span class="label">Domínios<br><span class="sub">${f.domains.length} únicos</span></span><span class="val">${domainRows}${extraDomains}</span></div>
+      </div>
+    </div>`
+  }
+
 
   for (let k of knownCheatFindings) {
     let bundleList = k.bundles.map(b => `<span class="bundle">${b}</span>`).join(" ")
@@ -2596,7 +2634,24 @@ async function main() {
 
   let { findings, netEntries, cheatAppFindings, knownCheatFindings } = await analyze(entries)
 
-  let html = buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ipsFindings, ipsMeta, filename)
+  let replaceFindings = []
+  if (ipsContent) {
+    let ipsRaw = parseIpsFile(ipsContent)
+    let ipsBundles = new Set((ipsRaw.entries || []).map(e => e.bundleId).filter(Boolean))
+    let ndjsonBundles = new Set(netEntries.map(e => e.bundleID).filter(Boolean))
+    for (let bid of ndjsonBundles) {
+      if (!ipsBundles.has(bid)) {
+        let appName = PROXY_IPA_BUNDLES[bid]
+        let isProxyApp = !!appName
+        let entries = netEntries.filter(e => e.bundleID === bid)
+        let hits = entries.reduce((s, e) => s + (e.hits || 1), 0)
+        let domains = [...new Set(entries.map(e => e.domain).filter(Boolean))]
+        replaceFindings.push({ bundleID: bid, appName: appName || bid, hits, domains, isProxyApp })
+      }
+    }
+  }
+
+  let html = buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ipsFindings, ipsMeta, replaceFindings, filename)
   await showResult(html)
 }
 
