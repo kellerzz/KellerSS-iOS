@@ -270,7 +270,57 @@ const IPS_CHEAT_EXACT = new Set([
   "live.cclerc.geranium", "com.shpion.cleaner",
   "com.ifunbox.ifunbox", "com.limneos.adprivacy",
   "com.apple.dt.Xcode", "com.apple.Preferences.Developer",
+  "com.apple.TestFlight",
+  "io.nextdns.NextDNS",
+  "developer.apple.wwdc-Release",
 ])
+
+const IPS_CHEAT_CATEGORIES = {
+  "com.apple.TestFlight":              "critical",
+  "com.opa334.dopamine":               "critical",
+  "org.coolstar.sileo":                "critical",
+  "org.coolstar.odyssey":              "critical",
+  "com.electrateam.unc0ver":           "critical",
+  "com.tihmstar.checkra1n":            "critical",
+  "org.taurine.jailbreak":             "critical",
+  "xyz.palera1n.palera1n":             "critical",
+  "com.opa334.TrollStore":             "critical",
+  "com.opa334.TrollStoreHelper":       "critical",
+  "com.opa334.trolldecrypt":           "critical",
+  "com.opa334.trollfools":             "critical",
+  "com.rileytestut.AltStore":          "critical",
+  "com.altstore.altstoreclassic":      "critical",
+  "com.sideloadly.sideloadly":         "critical",
+  "com.esign.ios":                     "critical",
+  "com.esign.esign":                   "critical",
+  "com.iosgods.iosgods":               "critical",
+  "com.gbox.pubg":                     "critical",
+  "com.tigisoftware.Filza":            "critical",
+  "com.tigisoftware.FilzaFree":        "critical",
+  "app.ish.iSH":                       "critical",
+  "com.monite.proxyff":                "critical",
+  "com.touchingapp.potatsolite":       "critical",
+  "com.touchingapp.potatso":           "critical",
+  "com.shadowrocket.Shadowrocket":     "critical",
+  "com.liguangming.Shadowrocket":      "critical",
+  "com.cloudflare.1dot1dot1dot1":      "vpn",
+  "io.nextdns.NextDNS":                "vpn",
+  "com.privateinternetaccess.ios":     "vpn",
+  "com.futureland.vpnmaster":          "vpn",
+  "com.nssurge.inc.surge-ios":         "vpn",
+  "com.luo.quantumultx":               "vpn",
+  "group.com.luo.quantumult":          "vpn",
+  "com.github.shadowsocks":            "vpn",
+  "com.netease.trojan":                "vpn",
+  "com.hiddify.app":                   "vpn",
+  "com.karing.app":                    "vpn",
+  "com.metacubex.ClashX":              "vpn",
+  "com.ssrss.Ssrss":                   "vpn",
+  "com.adguard.ios.AdguardPro":        "vpn",
+  "com.apple.dt.Xcode":                "developer",
+  "com.apple.Preferences.Developer":   "developer",
+  "developer.apple.wwdc-Release":      "developer",
+}
 
 const IPS_CHEAT_KEYWORDS = [
   "filza", "esign", "gbox", "sideload", "dopamine", "sileo",
@@ -294,9 +344,11 @@ function analyzeIps(parsed) {
     seen.add(bid)
 
     let reason = null
+    let category = "warning"
 
     if (IPS_CHEAT_EXACT.has(bid)) {
       reason = CHEAT_APPS[bid] || bid
+      category = IPS_CHEAT_CATEGORIES[bid] || "warning"
     } else {
       let bidLower = bid.toLowerCase()
       for (let kw of IPS_CHEAT_KEYWORDS) {
@@ -314,6 +366,7 @@ function analyzeIps(parsed) {
         eventType:   e.eventType || "?",
         count:       e.count || 0,
         reason:      reason,
+        category:    category,
       })
     }
   }
@@ -924,8 +977,11 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
   let ipsSection = ""
   if (ipsFindings && ipsFindings.length > 0) {
     let ipsRows = ipsFindings.map(f => `
-      <div class="ips-row">
+      <div class="ips-row ips-row-${f.category || 'warning'}">
         <div class="ips-row-left">
+          <div class="ips-row-top">
+            <span class="ips-cat-badge ips-cat-${f.category || 'warning'}">${f.category === 'critical' ? '🚨 CRÍTICO' : f.category === 'vpn' ? '🔒 VPN/PROXY' : f.category === 'developer' ? '🛠 DEVELOPER' : '⚠ SUSPEITO'}</span>
+          </div>
           <span class="ips-bundle">${f.bundleId}</span>
           <span class="ips-reason" data-reason-key="${encodeURIComponent(f.bundleId)}">${f.reason}</span>
         </div>
@@ -1210,6 +1266,20 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
     font-size:14px; font-weight:bold; padding:4px 10px; border-radius:20px;
   }
   .ips-rows  { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+  .ips-row { }
+  .ips-row-critical { background:#1a0010 !important; border-color:#ff004455 !important; }
+  .ips-row-vpn      { background:#0a0a1a !important; border-color:#4455ff44 !important; }
+  .ips-row-developer{ background:#0a1a0a !important; border-color:#44aa4444 !important; }
+  .ips-row-warning  { background:#1a0a00 !important; border-color:#ff880033 !important; }
+  .ips-row-top { margin-bottom:4px; }
+  .ips-cat-badge {
+    display:inline-block; font-size:9px; font-weight:bold;
+    padding:2px 8px; border-radius:10px; letter-spacing:0.5px;
+  }
+  .ips-cat-critical  { background:#2a0015; color:#ff3388; border:1px solid #ff338855; }
+  .ips-cat-vpn       { background:#0a0a2a; color:#6699ff; border:1px solid #6699ff55; }
+  .ips-cat-developer { background:#0a2a0a; color:#44cc44; border:1px solid #44cc4455; }
+  .ips-cat-warning   { background:#2a1000; color:#ff8800; border:1px solid #ff880055; }
   .ips-row {
     display:flex; justify-content:space-between; align-items:flex-start; gap:8px;
     background:#1a001a; border:1px solid #330033; border-radius:8px; padding:8px 10px;
