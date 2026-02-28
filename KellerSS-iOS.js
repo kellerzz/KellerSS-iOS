@@ -209,9 +209,29 @@ const FALSE_POSITIVE_IPS = new Set([
   "104.29.155.27",  "104.29.156.120", "104.29.137.112",
 ])
 
+const FF_PROXY_LOGIN_DOMAINS = new Set([
+  "version.ffmax.purplevioleto.com",
+  "version.ggwhitehawk.com",
+  "loginbp.ggpolarbear.com",
+  "gin.freefiremobile.com",
+  "100067.connect.garena.com",
+  "100067.msdk.garena.com",
+  "client.us.freefiremobile.com",
+  "client.sea.freefiremobile.com",
+  "sacnetwork.ggblueshark.com",
+  "sacevent.ggblueshark.com",
+])
+
+const FF_LEGIT_CALLERS = new Set(["com.dts.freefireth", "com.dts.freefiremax"])
+
 const KNOWN_CHEAT_INFRA = {
-  "46.202.145.85":    "Fatality Cheats — servidor confirmado",
+  "46.202.145.85":      "Fatality Cheats — servidor confirmado",
   "fatalitycheats.xyz": "Fatality Cheats — domínio oficial do cheat",
+  "anubisw.online":     "Servidor de cheat confirmado — Free Fire",
+  "api.baontq.xyz":     "API de cheat confirmado — Free Fire",
+  "version.ffmax.purplevioleto.com": "Versão modificada Free Fire MAX — cheat confirmado",
+  "version.ggwhitehawk.com":         "White Hawk cheat — servidor confirmado",
+  "loginbp.ggpolarbear.com":         "Polar Bear cheat — servidor confirmado",
 }
 
 async function findNdjsonFile() {
@@ -649,6 +669,21 @@ async function analyze(entries) {
   }
   cheatAppFindings = [...ffFakeFindings, ...cheatAppFindings]
 
+  let proxyLoginFindings = []
+  let proxyLoginSeen = {}
+  for (let e of netEntries) {
+    let d = (e.domain || "").toLowerCase()
+    let bid = e.bundleID || ""
+    if (FF_PROXY_LOGIN_DOMAINS.has(d) && bid && !FF_LEGIT_CALLERS.has(bid)) {
+      if (!proxyLoginSeen[d]) proxyLoginSeen[d] = { domain: e.domain, bundles: new Set(), hits: 0 }
+      proxyLoginSeen[d].bundles.add(bid)
+      proxyLoginSeen[d].hits += (e.hits || 1)
+    }
+  }
+  for (let [d, info] of Object.entries(proxyLoginSeen)) {
+    proxyLoginFindings.push({ domain: info.domain, bundles: [...info.bundles], hits: info.hits })
+  }
+
   let knownCheatFindings = []
   for (let e of netEntries) {
     let d = (e.domain || "").toLowerCase()
@@ -688,36 +723,41 @@ async function analyze(entries) {
 
     for (let j = 0; j < results.length; j++) {
       let info = results[j]
-      if (!info || info.status !== "success") continue
-
       let domain = chunk[j]
-      let ip = info.query || domain
+      let ip = (info && info.query) || domain
 
       if (FALSE_POSITIVE_IPS.has(ip) || FALSE_POSITIVE_IPS.has(domain)) continue
-
-      let { severity, reasons } = classifyIP(info, domain)
 
       let domLow2 = domain.toLowerCase()
       let isTldSuspect = SUSPICIOUS_TLDS.some(t => domLow2.endsWith(t)) ||
                          SUSPICIOUS_DOMAIN_WORDS.some(w => domLow2.split(".")[0].includes(w))
 
-      if (!severity && !isTldSuspect) continue
+      let severity = null
+      let reasons = []
+
+      if (info && info.status === "success") {
+        let classified = classifyIP(info, domain)
+        severity = classified.severity
+        reasons  = classified.reasons
+      }
 
       if (!severity && isTldSuspect) {
         severity = "HIGH"
         reasons = [`TLD suspeito: domínio com extensão de alto risco — padrão comum em servidores de cheat`]
       }
 
+      if (!severity && !isTldSuspect) continue
+
       candidates.push({
         severity, domain, ip,
-        country: info.country || "?",
-        city:    info.city || "?",
-        isp:     info.isp || "?",
-        org:     info.org || "?",
-        as:      info.as || "?",
-        hosting: info.hosting || false,
-        proxy:   info.proxy || false,
-        reverse: info.reverse || "",
+        country: (info && info.country) || "?",
+        city:    (info && info.city)    || "?",
+        isp:     (info && info.isp)     || "?",
+        org:     (info && info.org)     || "?",
+        as:      (info && info.as)      || "?",
+        hosting: (info && info.hosting) || false,
+        proxy:   (info && info.proxy)   || false,
+        reverse: (info && info.reverse) || "",
         hits:    domainHits[domain],
         bundles: [...domainBundles[domain]].slice(0, 4),
         reasons,
@@ -782,14 +822,38 @@ async function analyze(entries) {
     return b.hits - a.hits
   })
 
-  return { findings, netEntries, cheatAppFindings, knownCheatFindings }
+  let ghostAppFindings = []
+  if (typeof window !== "undefined") {
+  } else {
+  }
+  const GHOST_SUSPECT_DOMAINS = new Set(Object.keys(KNOWN_CHEAT_INFRA))
+  SUSPICIOUS_TLDS.forEach(t => {})
+
+  let suspectByBundle = {}
+  for (let e of netEntries) {
+    let bid = e.bundleID || ""
+    let dom = (e.domain || "").toLowerCase()
+    if (!bid) continue
+    let isKnown = GHOST_SUSPECT_DOMAINS.has(dom)
+    let isTld   = SUSPICIOUS_TLDS.some(t => dom.endsWith(t))
+    if (isKnown || isTld) {
+      if (!suspectByBundle[bid]) suspectByBundle[bid] = { domains: [], hits: 0 }
+      suspectByBundle[bid].domains.push(e.domain)
+      suspectByBundle[bid].hits += (e.hits || 1)
+    }
+  }
+  for (let [bid, info] of Object.entries(suspectByBundle)) {
+    ghostAppFindings.push({ bundleID: bid, domains: [...new Set(info.domains)], hits: info.hits })
+  }
+
+  return { findings, netEntries, cheatAppFindings, knownCheatFindings, ghostAppFindings, proxyLoginFindings }
 }
 
 function wait(ms) {
   return new Promise(resolve => Timer.schedule(ms, false, resolve))
 }
 
-function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ipsFindings, ipsMeta, replaceFindings, filename) {
+function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ipsFindings, ipsMeta, replaceFindings, ghostAppFindings, proxyLoginFindings, filename) {
   let allDomains = new Set(netEntries.map(e => e.domain || ""))
 
   let allTimestamps = netEntries.map(e => e.timeStamp).filter(Boolean).sort()
@@ -912,9 +976,27 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
   let highCount = findings.filter(f => f.severity === "HIGH").length
   let medCount  = findings.filter(f => f.severity === "MEDIUM").length
   replaceFindings = replaceFindings || []
-  let criticalCount = cheatAppFindings.length + knownCheatFindings.length + replaceFindings.length
+  proxyLoginFindings = proxyLoginFindings || []
+  let criticalCount = cheatAppFindings.length + knownCheatFindings.length + replaceFindings.length + proxyLoginFindings.length
 
   let criticalCards = ""
+
+  for (let p of proxyLoginFindings) {
+    let bundleList = p.bundles.map(b => `<span class="bundle" style="color:#ff4400">${b}</span>`).join(" ")
+    criticalCards += `
+    <div class="card critical" style="border-left-color:#ff4400;background:#140800;border-color:#3a1500;">
+      <div class="card-header">
+        <span class="badge critical" style="background:#1a0800;color:#ff4400;border-color:#ff440055;">&#128274; PROXY BYPASS LOGIN — CRÍTICO</span>
+        <span class="conns">${p.hits} conexões</span>
+      </div>
+      <div class="card-domain">${p.domain}</div>
+      <div class="grid">
+        <div class="row"><span class="label">Detecção</span><span class="val reason" style="color:#ff6600;font-weight:bold">Domínio exclusivo do Free Fire chamado por app não autorizado — padrão de proxy interceptando login</span></div>
+        <div class="row"><span class="label">App interceptor</span><span class="val">${bundleList}</span></div>
+        <div class="row"><span class="label">Esperado de</span><span class="val"><span class="bundle" style="color:#44ff88">com.dts.freefireth</span> <span class="bundle" style="color:#44ff88">com.dts.freefiremax</span></span></div>
+      </div>
+    </div>`
+  }
 
   for (let f of replaceFindings) {
     let label = f.isProxyApp
@@ -939,6 +1021,38 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
     </div>`
   }
 
+
+  let ghostSection = ""
+  if (ghostAppFindings && ghostAppFindings.length > 0) {
+    let ghostRows = ghostAppFindings.map(g => {
+      let domList = g.domains.slice(0,5).map(d => `<span class="ghost-domain">${d}</span>`).join("")
+      let more = g.domains.length > 5 ? `<span class="ghost-more">+${g.domains.length - 5} mais</span>` : ""
+      return `
+      <div class="ghost-row">
+        <div class="ghost-row-left">
+          <span class="ghost-bundle">${g.bundleID}</span>
+          <div class="ghost-domains">${domList}${more}</div>
+        </div>
+        <div class="ghost-row-right">
+          <span class="ghost-hits">${g.hits} hits</span>
+          <span class="ghost-label" data-i18n="ghostNotInUsage">⚠ Ausente no app_usage</span>
+        </div>
+      </div>`
+    }).join("")
+    ghostSection = `
+  <div class="ghost-banner">
+    <div class="ghost-header">
+      <span class="ghost-icon">👻</span>
+      <div class="ghost-title-block">
+        <div class="ghost-title" data-i18n="ghostTitle">Apps com domínios suspeitos — ausentes no app_usage</div>
+        <div class="ghost-sub" data-i18n="ghostSub">Presente no relatório de rede mas não encontrado nos dados de análise</div>
+      </div>
+      <span class="ghost-count">${ghostAppFindings.length}</span>
+    </div>
+    <div class="ghost-rows">${ghostRows}</div>
+    <div class="ghost-hint" data-i18n="ghostHint">⚠ App pode ter sido instalado via sideload ou o arquivo app_usage não cobre o período</div>
+  </div>`
+  }
 
   for (let k of knownCheatFindings) {
     let bundleList = k.bundles.map(b => `<span class="bundle">${b}</span>`).join(" ")
@@ -1304,6 +1418,29 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
   .reason { color:#ff8a80; }
   .rdns        { color:#ce93d8; font-style:italic; }
 
+  .ghost-banner {
+    background:linear-gradient(135deg,#0a0a1a,#080814);
+    border:1px solid #3344aa55; border-radius:12px;
+    padding:14px; margin-bottom:12px;
+  }
+  .ghost-header { display:flex; align-items:flex-start; gap:10px; margin-bottom:12px; }
+  .ghost-icon   { font-size:20px; flex-shrink:0; }
+  .ghost-title-block { flex:1; }
+  .ghost-title  { font-size:12px; font-weight:bold; color:#8899ff; letter-spacing:0.5px; }
+  .ghost-sub    { font-size:10px; color:#334466; margin-top:2px; }
+  .ghost-count  { background:#0a0a2a; color:#6677ee; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:10px; border:1px solid #3344aa55; align-self:flex-start; }
+  .ghost-rows   { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+  .ghost-row    { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; background:#0a0a20; border:1px solid #222244; border-radius:8px; padding:10px; }
+  .ghost-row-left  { flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+  .ghost-row-right { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
+  .ghost-bundle { font-size:11px; font-weight:bold; color:#aabbff; word-break:break-all; }
+  .ghost-domains { display:flex; flex-wrap:wrap; gap:4px; }
+  .ghost-domain { font-size:9px; background:#0d0d30; color:#6677cc; border:1px solid #223; padding:1px 6px; border-radius:8px; }
+  .ghost-more   { font-size:9px; color:#445; }
+  .ghost-hits   { font-size:11px; font-weight:bold; color:#6677ee; }
+  .ghost-label  { font-size:9px; color:#334; background:#0a0a1a; padding:2px 6px; border-radius:6px; border:1px solid #223; }
+  .ghost-hint   { font-size:9px; color:#334466; border-top:1px solid #1a1a33; padding-top:8px; }
+
   .roots-banner {
     display:flex; align-items:flex-start; gap:12px;
     background:linear-gradient(135deg,#1a0a00,#120800);
@@ -1535,6 +1672,7 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
   ${highCount > 0 ? `
   ${rootsWarn}
   ${ipsSection}
+  ${ghostSection}
   <div class="section-header sh-high">
     <div class="sh-icon">&#128683;</div>
     <div class="sh-text">
@@ -2632,7 +2770,7 @@ async function main() {
 
   Speech.speak(S.start)
 
-  let { findings, netEntries, cheatAppFindings, knownCheatFindings } = await analyze(entries)
+  let { findings, netEntries, cheatAppFindings, knownCheatFindings, ghostAppFindings, proxyLoginFindings } = await analyze(entries)
 
   let replaceFindings = []
   if (ipsContent) {
@@ -2651,7 +2789,7 @@ async function main() {
     }
   }
 
-  let html = buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ipsFindings, ipsMeta, replaceFindings, filename)
+  let html = buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ipsFindings, ipsMeta, replaceFindings, ghostAppFindings, proxyLoginFindings, filename)
   await showResult(html)
 }
 
