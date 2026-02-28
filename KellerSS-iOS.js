@@ -669,16 +669,31 @@ async function analyze(entries) {
   }
   cheatAppFindings = [...ffFakeFindings, ...cheatAppFindings]
 
+  // Coleta quais domínios FF foram chamados pelos apps legítimos do FF
+  let ffLegitDomainsSeen = new Set()
+  for (let e of netEntries) {
+    let d = (e.domain || "").toLowerCase()
+    let bid = e.bundleID || ""
+    if (FF_LEGIT_CALLERS.has(bid) && FF_PROXY_LOGIN_DOMAINS.has(d)) {
+      ffLegitDomainsSeen.add(d)
+    }
+  }
+
   let proxyLoginFindings = []
   let proxyLoginSeen = {}
   for (let e of netEntries) {
     let d = (e.domain || "").toLowerCase()
     let bid = e.bundleID || ""
-    if (FF_PROXY_LOGIN_DOMAINS.has(d) && bid && !FF_LEGIT_CALLERS.has(bid)) {
-      if (!proxyLoginSeen[d]) proxyLoginSeen[d] = { domain: e.domain, bundles: new Set(), hits: 0 }
-      proxyLoginSeen[d].bundles.add(bid)
-      proxyLoginSeen[d].hits += (e.hits || 1)
-    }
+    if (!bid) continue
+    if (FF_LEGIT_CALLERS.has(bid)) continue
+    if (IGNORED_BUNDLES.has(bid)) continue
+    if (!FF_PROXY_LOGIN_DOMAINS.has(d)) continue
+    // Só dispara se o domínio NÃO foi chamado pelos apps legítimos do FF na mesma sessão
+    // Isso evita falsos positivos de janela de tempo (iOS agrupando apps diferentes)
+    if (ffLegitDomainsSeen.has(d)) continue
+    if (!proxyLoginSeen[d]) proxyLoginSeen[d] = { domain: e.domain, bundles: new Set(), hits: 0 }
+    proxyLoginSeen[d].bundles.add(bid)
+    proxyLoginSeen[d].hits += (e.hits || 1)
   }
   for (let [d, info] of Object.entries(proxyLoginSeen)) {
     proxyLoginFindings.push({ domain: info.domain, bundles: [...info.bundles], hits: info.hits })
