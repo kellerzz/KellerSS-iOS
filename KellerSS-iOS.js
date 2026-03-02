@@ -702,18 +702,24 @@ async function analyze(entries) {
   let knownCheatFindings = []
   for (let e of netEntries) {
     let d = (e.domain || "").toLowerCase()
+    let bid = e.bundleID || ""
+    // Se o bundle é o app legítimo do FF e o domínio é um domínio oficial de proxy/login do FF,
+    // não dispara como cheat — é tráfego normal do próprio jogo.
+    if (FF_LEGIT_CALLERS.has(bid) && FF_PROXY_LOGIN_DOMAINS.has(d)) continue
     for (let [indicator, desc] of Object.entries(KNOWN_CHEAT_INFRA)) {
       if (d === indicator.toLowerCase() || d.endsWith("." + indicator.toLowerCase())) {
+        // Domínios que fazem parte do FF_PROXY_LOGIN_DOMAINS só são cheat se chamados por bundle não-legítimo
+        if (FF_PROXY_LOGIN_DOMAINS.has(indicator.toLowerCase()) && FF_LEGIT_CALLERS.has(bid)) continue
         let existing = knownCheatFindings.find(k => k.indicator === indicator)
         if (existing) {
           existing.hits += (e.hits || 1)
-          if (e.bundleID) existing.bundles.add(e.bundleID)
+          if (bid) existing.bundles.add(bid)
         } else {
           knownCheatFindings.push({
             indicator,
             desc,
             hits: e.hits || 1,
-            bundles: new Set(e.bundleID ? [e.bundleID] : []),
+            bundles: new Set(bid ? [bid] : []),
           })
         }
       }
@@ -849,6 +855,8 @@ async function analyze(entries) {
     let bid = e.bundleID || ""
     let dom = (e.domain || "").toLowerCase()
     if (!bid) continue
+    // Não flagra o app legítimo do FF acessando seus próprios domínios de proxy/login
+    if (FF_LEGIT_CALLERS.has(bid) && FF_PROXY_LOGIN_DOMAINS.has(dom)) continue
     let isKnown = GHOST_SUSPECT_DOMAINS.has(dom)
     let isTld   = SUSPICIOUS_TLDS.some(t => dom.endsWith(t))
     if (isKnown || isTld) {
