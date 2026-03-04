@@ -2795,19 +2795,20 @@ async function main() {
 
   let { findings, netEntries, cheatAppFindings, knownCheatFindings, ghostAppFindings, proxyLoginFindings } = await analyze(entries)
 
+  const REPLACE_WATCHED_BUNDLES = new Set(["com.spotify.client"])
+
   let replaceFindings = []
   if (ipsContent) {
     let ipsRaw = parseIpsFile(ipsContent)
     let ipsBundles = new Set((ipsRaw.entries || []).map(e => e.bundleId).filter(Boolean))
-    let ndjsonBundles = new Set(netEntries.map(e => e.bundleID).filter(Boolean))
-    for (let bid of ndjsonBundles) {
-      if (!ipsBundles.has(bid)) {
-        let appName = PROXY_IPA_BUNDLES[bid]
-        let isProxyApp = !!appName
+    for (let bid of REPLACE_WATCHED_BUNDLES) {
+      let hasNetActivity = netEntries.some(e => e.bundleID === bid)
+      if (hasNetActivity && !ipsBundles.has(bid)) {
+        let appName = PROXY_IPA_BUNDLES[bid] || bid
         let entries = netEntries.filter(e => e.bundleID === bid)
         let hits = entries.reduce((s, e) => s + (e.hits || 1), 0)
         let domains = [...new Set(entries.map(e => e.domain).filter(Boolean))]
-        replaceFindings.push({ bundleID: bid, appName: appName || bid, hits, domains, isProxyApp })
+        replaceFindings.push({ bundleID: bid, appName, hits, domains, isProxyApp: true })
       }
     }
   }
