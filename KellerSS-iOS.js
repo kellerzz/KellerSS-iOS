@@ -91,6 +91,21 @@ const CHEAT_PROXY_ASN = {
   "AS13335": "Cloudflare (CDN/Proxy — comum em cheats)",
   "AS209": "CenturyLink / Lumen",
   "AS7203": "Sharktech",
+  "AS9009":  "M247 Ltd (cheat proxy EU/BR)",
+  "AS51167": "Contabo GmbH",
+  "AS24940": "Hetzner Online GmbH",
+  "AS136907": "Huawei Cloud",
+  "AS45090": "Tencent Cloud",
+  "AS55967": "Baidu Cloud",
+  "AS396982": "Google Cloud (suspeito se acessado via IP direto)",
+  "AS16509": "Amazon AWS (suspeito se acessado via IP direto)",
+  "AS8075":  "Microsoft Azure (suspeito se acessado via IP direto)",
+  "AS4837":  "China Unicom",
+  "AS4134":  "China Telecom",
+  "AS63949": "Linode / Akamai Cloud",
+  "AS200651": "ServerAstra (proxy cheat EU)",
+  "AS30083": "GTHost / Limestone Networks",
+  "AS62240": "Clouvider Ltd",
 }
 
 const RDNS_HOSTING_PATTERNS = [
@@ -165,20 +180,91 @@ const CHEAT_APPS = {
   "com.ifunbox.ifunbox":              "iFunBox — gerenciador de arquivos iOS",
   "com.limneos.adprivacy":            "AdPrivacy — bloqueio/manipulação de rede",
   "com.jjcm.nomoread":                "NoMoreAd — bloqueio de rede (MITM possível)",
+  "com.nordvpn.NordVPN":              "NordVPN — VPN comercial",
+  "com.expressvpn.ExpressVPN":        "ExpressVPN — VPN comercial",
+  "net.mullvad.MullvadVPN":           "Mullvad VPN — VPN anonimizadora",
+  "com.agilebits.onepassword":        "1Password (verificar se usado para esconder senhas de cheat)",
+  "com.wireguard.ios.WireGuard":      "WireGuard — túnel VPN/proxy",
+  "com.zedge.Zedge":                  "Zedge — suspeito em alguns cheats BR",
+  "com.proxyman.ios":                 "Proxyman — MITM proxy profissional iOS",
+  "com.httptoolkit.app":              "HTTP Toolkit — interceptação HTTPS",
+  "com.teddysun.shadowrocket":        "Shadowrocket (clone) — proxy iOS",
+  "com.liqianapp.liqian":             "LiQian — proxy iOS CN",
+  "org.sbtools.SBManager":            "SBManager — tweak manager JB",
+  "com.opa334.Choicy":                "Choicy — tweak manager JB",
+  "com.julioverne.tsprotector":       "TSProtector — anti-jailbreak detection bypass",
+  "com.level3tjg.a-bypass":           "A-Bypass — anti-jailbreak bypass",
+  "com.nullpixel.bfdecrypt":          "BFDecrypt — decifrar IPAs",
+  "com.uroboro.dumpdecrypted":        "dumpdecrypted — decifrar IPAs",
+  "com.conorthedev.taig":             "TaiG — Jailbreak",
+  "com.pangu.Pangu":                  "Pangu — Jailbreak",
+  "com.phoenix.jailbreak":            "Phoenix — Jailbreak",
+  "com.chimera.jailbreak":            "Chimera — Jailbreak",
+  "io.github.hbang.typeface":         "Typeface — tweak JB",
+  "com.ipadkid.deviceguru":           "Device Guru — info root device",
+  "com.creativeappsco.iexplorer":     "iExplorer — acesso ao filesystem",
+  "net.installipa.installer":         "IPA Installer — sideload",
+  "com.appcake.appcakefree":          "AppCake — app store não oficial",
+  "com.koushikdutta.impactor":        "Cydia Impactor — sideload",
+  "com.utrade.ios.GameGuardian":      "GameGuardian — modificador de memória de jogos",
+  "com.cheatengine.ce":               "Cheat Engine — modificador de memória",
+  "com.iospatcher.app":               "iOSPatcher — patcher de apps",
+  "com.hackyouriphone.AppSync":       "AppSync Unified — bypass assinatura IPA",
 }
 
+// TLDs com altíssima incidência em servidores de cheat e quase zero uso legítimo
+// Removidos: .tech, .space, .online, .live, .store, .today, .work, .science, .vip, .cc
+// pois são usados amplamente por serviços legítimos também
 const SUSPICIOUS_TLDS = [
-  ".site", ".store", ".netlify.app", ".netlify", ".xyz", ".pw",
-  ".top", ".click", ".bid", ".win", ".stream", ".download",
+  ".site", ".netlify.app", ".xyz", ".pw",
+  ".click", ".bid", ".win", ".stream", ".download",
   ".icu", ".gq", ".cf", ".ml", ".ga", ".tk",
   ".monster", ".fun", ".rest", ".bar", ".lol",
+  ".su", ".biz.pl",
+  ".party", ".racing", ".review", ".trade", ".accountant",
+  ".date", ".faith", ".loan", ".men",
+  ".webcam", ".cricket",
 ]
 
+// Só palavras que NUNCA aparecem em domínios legítimos — muito específicas de cheat/hack
+// Palavras genéricas como "proxy", "vpn", "relay", "tunnel", "gate", "forward" foram removidas
+// pois causam falso positivo em serviços legítimos de rede, roteadores, CDNs etc.
 const SUSPICIOUS_DOMAIN_WORDS = [
-  "proxy", "cheat", "hack", "bypass", "mitm", "inject",
-  "spoof", "crack", "exploit", "payload", "tunnel",
-  "vpn", "socks", "relay", "forward", "gate",
+  "cheat", "hack", "mitm",
+  "aimbot", "wallhack", "triggerbot",
+  "spinbot", "norecoil", "rapidfire",
+  "speedhack", "noclip",
+  "autoaim", "autofire", "antiban",
+  "fakeip", "fakeapp", "fakegps",
+  "modmenu", "modpack",
+  "injector",
 ]
+
+// Domínios legítimos conhecidos — nunca flagrar como suspeito mesmo que ISP seja VPS
+const LEGIT_DOMAINS_WHITELIST = new Set([
+  "apple.com", "icloud.com", "mzstatic.com", "apple-cloudkit.com",
+  "aaplimg.com", "cdn-apple.com", "mask-api.icloud.com",
+  "google.com", "googleapis.com", "gstatic.com", "googleusercontent.com",
+  "amazon.com", "amazonaws.com", "cloudfront.net",
+  "fastly.net", "fastly.com",
+  "akamai.net", "akamaiedge.net", "akamaitechnologies.com", "akamaized.net",
+  "edgekey.net", "edgesuite.net",
+  "facebook.com", "fbcdn.net", "instagram.com",
+  "whatsapp.com", "whatsapp.net",
+  "twitter.com", "twimg.com", "t.co",
+  "youtube.com", "ytimg.com", "googlevideo.com",
+  "tiktok.com", "tiktokv.com", "musical.ly",
+  "discord.com", "discordapp.com", "discordapp.net",
+  "netflix.com", "nflxvideo.net", "nflximg.net",
+  "spotify.com", "scdn.co",
+  "microsoft.com", "office.com", "skype.com",
+  "garena.com", "garenaonline.com", "freefiremobile.com",
+  "ggblueshark.com", "ggpolarbear.com", "ggwhitehawk.com",
+  "shopee.com.br", "mercadolivre.com.br", "mercadopago.com",
+  "ifood.com.br", "rappi.com.br",
+  "uber.com", "ubereats.com",
+  "cloudflare.com",
+])
 
 const PROXY_IPA_BUNDLES = {
   "com.spotify.client":         "Spotify",
@@ -282,6 +368,7 @@ function looksLikeUsageFile(content) {
 const IPS_CHEAT_EXACT = new Set([
   "com.touchingapp.potatsolite", "com.touchingapp.potatso",
   "com.shadowrocket.Shadowrocket", "com.liguangming.Shadowrocket",
+  "com.teddysun.shadowrocket",
   "com.monite.proxyff", "com.nssurge.inc.surge-ios",
   "com.luo.quantumultx", "group.com.luo.quantumult",
   "com.github.shadowsocks", "com.netease.trojan",
@@ -289,14 +376,23 @@ const IPS_CHEAT_EXACT = new Set([
   "com.ssrss.Ssrss", "com.adguard.ios.AdguardPro",
   "com.privateinternetaccess.ios", "com.futureland.vpnmaster",
   "com.cloudflare.1dot1dot1dot1",
+  "com.nordvpn.NordVPN", "com.expressvpn.ExpressVPN",
+  "net.mullvad.MullvadVPN", "com.wireguard.ios.WireGuard",
+  "com.proxyman.ios", "com.httptoolkit.app",
   "com.opa334.dopamine", "org.coolstar.sileo", "org.coolstar.odyssey",
   "com.electrateam.unc0ver", "com.tihmstar.checkra1n",
   "org.taurine.jailbreak", "xyz.palera1n.palera1n",
+  "com.conorthedev.taig", "com.pangu.Pangu", "com.phoenix.jailbreak",
+  "com.chimera.jailbreak",
   "com.opa334.TrollStore", "com.opa334.TrollStoreHelper",
   "com.opa334.trolldecrypt", "com.opa334.trollfools",
+  "com.opa334.Choicy",
   "xyz.willy.Zebra", "com.cydia.Cydia",
+  "org.sbtools.SBManager",
   "com.rileytestut.AltStore", "com.altstore.altstoreclassic",
   "com.sideloadly.sideloadly", "com.esign.ios", "com.esign.esign",
+  "net.installipa.installer", "com.appcake.appcakefree",
+  "com.koushikdutta.impactor",
   "com.iosgods.iosgods", "com.gbox.pubg",
   "com.tigisoftware.Filza", "com.tigisoftware.FilzaFree",
   "app.ish.iSH", "com.septudio.SSHClientLite",
@@ -306,6 +402,11 @@ const IPS_CHEAT_EXACT = new Set([
   "com.apple.TestFlight",
   "io.nextdns.NextDNS",
   "developer.apple.wwdc-Release",
+  "com.julioverne.tsprotector", "com.level3tjg.a-bypass",
+  "com.nullpixel.bfdecrypt", "com.uroboro.dumpdecrypted",
+  "com.hackyouriphone.AppSync",
+  "com.utrade.ios.GameGuardian", "com.cheatengine.ce",
+  "com.iospatcher.app",
 ])
 
 const IPS_CHEAT_CATEGORIES = {
@@ -317,15 +418,24 @@ const IPS_CHEAT_CATEGORIES = {
   "com.tihmstar.checkra1n":            "critical",
   "org.taurine.jailbreak":             "critical",
   "xyz.palera1n.palera1n":             "critical",
+  "com.conorthedev.taig":              "critical",
+  "com.pangu.Pangu":                   "critical",
+  "com.phoenix.jailbreak":             "critical",
+  "com.chimera.jailbreak":             "critical",
   "com.opa334.TrollStore":             "critical",
   "com.opa334.TrollStoreHelper":       "critical",
   "com.opa334.trolldecrypt":           "critical",
   "com.opa334.trollfools":             "critical",
+  "com.opa334.Choicy":                 "critical",
+  "org.sbtools.SBManager":             "critical",
   "com.rileytestut.AltStore":          "critical",
   "com.altstore.altstoreclassic":      "critical",
   "com.sideloadly.sideloadly":         "critical",
   "com.esign.ios":                     "critical",
   "com.esign.esign":                   "critical",
+  "net.installipa.installer":          "critical",
+  "com.appcake.appcakefree":           "critical",
+  "com.koushikdutta.impactor":         "critical",
   "com.iosgods.iosgods":               "critical",
   "com.gbox.pubg":                     "critical",
   "com.tigisoftware.Filza":            "critical",
@@ -336,10 +446,25 @@ const IPS_CHEAT_CATEGORIES = {
   "com.touchingapp.potatso":           "critical",
   "com.shadowrocket.Shadowrocket":     "critical",
   "com.liguangming.Shadowrocket":      "critical",
+  "com.teddysun.shadowrocket":         "critical",
+  "com.proxyman.ios":                  "critical",
+  "com.httptoolkit.app":               "critical",
+  "com.julioverne.tsprotector":        "critical",
+  "com.level3tjg.a-bypass":           "critical",
+  "com.nullpixel.bfdecrypt":           "critical",
+  "com.uroboro.dumpdecrypted":         "critical",
+  "com.hackyouriphone.AppSync":        "critical",
+  "com.utrade.ios.GameGuardian":       "critical",
+  "com.cheatengine.ce":                "critical",
+  "com.iospatcher.app":                "critical",
   "com.cloudflare.1dot1dot1dot1":      "vpn",
   "io.nextdns.NextDNS":                "vpn",
   "com.privateinternetaccess.ios":     "vpn",
   "com.futureland.vpnmaster":          "vpn",
+  "com.nordvpn.NordVPN":               "vpn",
+  "com.expressvpn.ExpressVPN":         "vpn",
+  "net.mullvad.MullvadVPN":            "vpn",
+  "com.wireguard.ios.WireGuard":       "vpn",
   "com.nssurge.inc.surge-ios":         "vpn",
   "com.luo.quantumultx":               "vpn",
   "group.com.luo.quantumult":          "vpn",
@@ -364,6 +489,14 @@ const IPS_CHEAT_KEYWORDS = [
   "shadowsocks", "trojan", "karing", "proxyff",
   "netlify", "cheat", "hack", "bypass", "inject", "tweak",
   "substrate", "substitute", "libhooker",
+  "gameguardian", "cheatengine", "gamehack", "memorypatch",
+  "patcher", "cracked", "modded", "unlimited", "norecoil",
+  "aimbot", "wallhack", "esp", "modmenu",
+  "wireguard", "nordvpn", "expressvpn", "mullvad",
+  "proxyman", "httptoolkit", "mitm", "intercept",
+  "tsprotector", "abypass", "jbbypass", "jbdetect",
+  "bfdecrypt", "dumpdecrypt", "appsync", "appcake",
+  "impactor", "installer",
 ]
 
 function analyzeIps(parsed) {
@@ -482,34 +615,61 @@ async function resolveHostname(domain) {
   return domain
 }
 
+// Verifica se um domínio pertence a uma whitelist legítima (raiz do domínio)
+function isWhitelistedDomain(domain) {
+  let d = (domain || "").toLowerCase()
+  for (let legit of LEGIT_DOMAINS_WHITELIST) {
+    if (d === legit || d.endsWith("." + legit)) return true
+  }
+  return false
+}
+
+// Verifica se a palavra suspeita está num contexto legítimo
+// Ex: "vpn.apple.com" — "vpn" está lá mas o domínio raiz é apple.com (legítimo)
+function hasSuspiciousDomainWord(domain) {
+  let d = (domain || "").toLowerCase()
+  if (isWhitelistedDomain(d)) return null
+  let parts = d.split(".")
+  // Pega apenas o subdomínio / hostname principal, não o TLD
+  let hostPart = parts.slice(0, -2).join(".") + (parts.length >= 2 ? "." + parts[parts.length - 2] : "")
+  for (let word of SUSPICIOUS_DOMAIN_WORDS) {
+    if (hostPart.includes(word)) return word
+  }
+  return null
+}
+
 function classifyIP(info, domain) {
   if (!info) return { severity: null, reasons: [] }
   let reasons = []
   let severity = null
   let tldFlag = false
 
-  let domLow = (domain || "").toLowerCase()
-  for (let tld of SUSPICIOUS_TLDS) {
-    if (domLow.endsWith(tld) || domLow.includes(tld + "/")) {
-      severity = "HIGH"
-      tldFlag = true
-      reasons.push(`TLD suspeito detectado: "${tld}" — padrão comum em cheats/proxies`)
-      break
-    }
-  }
-  if (!tldFlag) {
-    let parts = domLow.split(".")[0]
-    for (let word of SUSPICIOUS_DOMAIN_WORDS) {
-      if (parts.includes(word) || domLow.includes(word + ".")) {
+  // Domínios na whitelist nunca são flagrados por TLD/keyword/hosting
+  // (podem ainda ser flagrados por KNOWN_CHEAT_INFRA ou ASN direta)
+  let whitelisted = isWhitelistedDomain(domain)
+
+  if (!whitelisted) {
+    let domLow = (domain || "").toLowerCase()
+    for (let tld of SUSPICIOUS_TLDS) {
+      if (domLow.endsWith(tld) || domLow.includes(tld + "/")) {
         severity = "HIGH"
         tldFlag = true
-        reasons.push(`Palavra suspeita no domínio: "${word}"`)
+        reasons.push(`TLD suspeito detectado: "${tld}" — padrão comum em cheats/proxies`)
         break
+      }
+    }
+    if (!tldFlag) {
+      let suspWord = hasSuspiciousDomainWord(domain)
+      if (suspWord) {
+        severity = "HIGH"
+        tldFlag = true
+        reasons.push(`Palavra suspeita no domínio: "${suspWord}"`)
       }
     }
   }
 
-  if (info.hosting) {
+  // Hosting/proxy flags — mas não para domínios whitelisted
+  if (!whitelisted && info.hosting) {
     severity = "HIGH"
     reasons.push(`VPS/HOSTING — ISP: ${info.isp}`)
   }
@@ -521,20 +681,34 @@ function classifyIP(info, domain) {
   let asn = (info.as || "").split(" ")[0].toUpperCase()
   if (CHEAT_PROXY_ASN[asn]) {
     let isCloudflare = asn === "AS13335"
+    let isBigCloud = ["AS396982","AS16509","AS8075"].includes(asn)
     if (isCloudflare) {
+      // Cloudflare via IP direto é suspeito; via domínio legítimo não
       let domainIsIP = /^[\d.:]+$/.test(domain || "")
       if (domainIsIP) {
         severity = "HIGH"
         reasons.push(`Cloudflare acessado via IP direto — padrão de proxy cheat (${asn})`)
       }
-    } else {
+      // Cloudflare via domínio — só suspeito se não for whitelisted e for hosting flag
+      else if (!whitelisted && info.hosting) {
+        severity = severity || "MEDIUM"
+        reasons.push(`Cloudflare com flag hosting — possível proxy cheat (${asn})`)
+      }
+    } else if (isBigCloud) {
+      // AWS/GCP/Azure via IP direto = suspeito
+      let domainIsIP = /^[\d.:]+$/.test(domain || "")
+      if (domainIsIP && !whitelisted) {
+        severity = "HIGH"
+        reasons.push(`${CHEAT_PROXY_ASN[asn]} — acessado via IP direto (padrão de proxy)`)
+      }
+    } else if (!whitelisted) {
       severity = "HIGH"
       reasons.push(`ASN de cheat proxy conhecido: ${asn} — ${CHEAT_PROXY_ASN[asn]}`)
     }
   }
 
   let rdns = (info.reverse || "").toLowerCase()
-  if (rdns) {
+  if (rdns && !whitelisted) {
     for (let pattern of RDNS_HOSTING_PATTERNS) {
       if (rdns.includes(pattern)) {
         severity = severity || "HIGH"
@@ -546,16 +720,18 @@ function classifyIP(info, domain) {
       severity = "HIGH"
       reasons.push(`Hostinger VPS (padrao cheat proxy BR): ${info.reverse}`)
     }
-  } else if (info.hosting) {
+  } else if (!whitelisted && info.hosting) {
     reasons.push("Sem rDNS (PTR) — tipico de VPS usado como proxy")
   }
 
-  let orgLower = ((info.org || "") + " " + (info.isp || "") + " " + (info.as || "")).toLowerCase()
-  for (let kw of VPS_HOSTING_KEYWORDS) {
-    if (orgLower.includes(kw)) {
-      severity = severity || "MEDIUM"
-      reasons.push(`Org/ISP associado a hospedagem/cheat proxy: ${kw}`)
-      break
+  if (!whitelisted) {
+    let orgLower = ((info.org || "") + " " + (info.isp || "") + " " + (info.as || "")).toLowerCase()
+    for (let kw of VPS_HOSTING_KEYWORDS) {
+      if (orgLower.includes(kw)) {
+        severity = severity || "MEDIUM"
+        reasons.push(`Org/ISP associado a hospedagem/cheat proxy: ${kw}`)
+        break
+      }
     }
   }
 
@@ -563,9 +739,13 @@ function classifyIP(info, domain) {
 }
 
 async function probeHost(domain) {
+  // Não faz probe em domínios whitelisted
+  if (isWhitelistedDomain(domain)) return null
+
   let safe = ["apple.com","icloud.com","google.com","googleapis.com",
               "gstatic.com","amazon.com","microsoft.com","iphone","localhost",
-              "akamai","cloudfront","fastly","edgekey","aaplimg"]
+              "akamai","cloudfront","fastly","edgekey","aaplimg",
+              "garena.com","freefiremobile.com","ggblueshark.com"]
   if (safe.some(s => domain.toLowerCase().includes(s))) return null
 
   let result = { status: null, banner: null, online: false, suspicious: false }
@@ -585,20 +765,49 @@ async function probeHost(domain) {
 
       let serverHeader = (headers["Server"] || headers["server"] || "").toLowerCase()
       let bodyLow = (body || "").slice(0, 600).toLowerCase()
-      let combined = serverHeader + " " + bodyLow
 
-      let suspiciousBanners = [
-        "nginx", "apache", "ubuntu", "debian", "centos", "mitmproxy",
-        "squid", "haproxy", "openresty", "caddy", "traefik",
-        "403 forbidden", "bad gateway", "bad request", "proxy error"
+      // Só marca como suspeito se for banner MUITO específico de proxy/servidor de ataque
+      // Nginx/Apache genéricos são falso positivo — só flagra com contexto adicional
+      const DEFINITIVE_PROXY_BANNERS = [
+        "mitmproxy", "squid", "haproxy", "openresty", "traefik",
+        "caddy", "envoy", "nghttpx", "tinyproxy",
+      ]
+
+      const POSSIBLE_PROXY_BANNERS = [
+        "nginx", "apache", "ubuntu", "debian", "centos",
       ]
 
       if (serverHeader) {
-        result.banner = serverHeader.split("/")[0].trim()
-        result.suspicious = true
+        let serverBase = serverHeader.split("/")[0].trim()
+        if (DEFINITIVE_PROXY_BANNERS.some(b => serverHeader.includes(b))) {
+          result.banner = serverBase
+          result.suspicious = true
+        } else if (POSSIBLE_PROXY_BANNERS.some(b => serverHeader.includes(b))) {
+          // Nginx/Apache só são suspeitos se combinados com status 4xx/5xx
+          // ou se o body tiver conteúdo típico de proxy
+          let sc = result.status
+          let hasProxyBody = bodyLow.includes("bad gateway") ||
+                             bodyLow.includes("proxy error") ||
+                             bodyLow.includes("via:") ||
+                             bodyLow.includes("502") ||
+                             bodyLow.includes("504")
+          if (sc === 403 || sc === 502 || sc === 504 || sc === 400 || hasProxyBody) {
+            result.banner = serverBase
+            result.suspicious = true
+          } else {
+            // Nginx/Apache respondendo normalmente — não é suspeito por si só
+            result.banner = serverBase
+            result.suspicious = false
+          }
+        }
       } else {
-        for (let b of suspiciousBanners) {
-          if (combined.includes(b)) {
+        // Sem header Server — verifica pelo body
+        let suspiciousBodies = [
+          "mitmproxy", "squid proxy", "haproxy", "bad gateway",
+          "proxy error", "this is a proxy"
+        ]
+        for (let b of suspiciousBodies) {
+          if (bodyLow.includes(b)) {
             result.banner = b
             result.suspicious = true
             break
@@ -607,7 +816,7 @@ async function probeHost(domain) {
       }
 
       let sc = result.status
-      if (sc === 403 || sc === 502 || sc === 504 || sc === 400) result.suspicious = true
+      if (sc === 502 || sc === 504) result.suspicious = true
 
       break
     } catch(e) {
@@ -627,6 +836,8 @@ async function analyze(entries) {
     if (IGNORED_BUNDLES.has(e.bundleID)) continue
     let d = e.domain || ""
     if (!d) continue
+    // Não conta domínios whitelisted para análise de suspeitos
+    if (isWhitelistedDomain(d)) continue
     domainHits[d] = (domainHits[d] || 0) + (e.hits || 1)
     if (!domainBundles[d]) domainBundles[d] = new Set()
     domainBundles[d].add(e.bundleID || "?")
@@ -636,7 +847,7 @@ async function analyze(entries) {
     .sort((a, b) => b[1] - a[1])
     .map(([d]) => d)
 
-  console.log(`Total dominios unicos: ${allDomains.length}`)
+  console.log(`Total dominios unicos (não whitelisted): ${allDomains.length}`)
 
   let allBundles = new Set()
   for (let e of netEntries) { if (e.bundleID && !IGNORED_BUNDLES.has(e.bundleID)) allBundles.add(e.bundleID) }
@@ -669,6 +880,47 @@ async function analyze(entries) {
   }
   cheatAppFindings = [...ffFakeFindings, ...cheatAppFindings]
 
+  // --- DETECÇÃO DE ACESSO PRÉ-JOGO ---
+  // Verifica se houve acesso a domínios suspeitos ANTES da primeira sessão do FF
+  let preGameFindings = []
+  let ffSortedEntries = netEntries
+    .filter(e => FF_LEGIT_BUNDLES.has(e.bundleID) && e.timeStamp)
+    .sort((a, b) => a.timeStamp.localeCompare(b.timeStamp))
+
+  if (ffSortedEntries.length > 0) {
+    let firstFFTime = ffSortedEntries[0].timeStamp
+    // Janela pré-jogo: 10 minutos antes do primeiro acesso do FF
+    let preWindow = new Date(new Date(firstFFTime) - 10 * 60 * 1000).toISOString()
+
+    let preGameEntries = netEntries.filter(e => {
+      if (!e.timeStamp || !e.domain) return false
+      if (FF_LEGIT_BUNDLES.has(e.bundleID)) return false
+      if (IGNORED_BUNDLES.has(e.bundleID)) return false
+      return e.timeStamp >= preWindow && e.timeStamp < firstFFTime
+    })
+
+    let preGameSuspect = {}
+    for (let e of preGameEntries) {
+      let d = (e.domain || "").toLowerCase()
+      if (isWhitelistedDomain(d)) continue
+      let isTld = SUSPICIOUS_TLDS.some(t => d.endsWith(t))
+      let isKnown = Object.keys(KNOWN_CHEAT_INFRA).some(k => d === k.toLowerCase() || d.endsWith("." + k.toLowerCase()))
+      if (isTld || isKnown) {
+        if (!preGameSuspect[d]) preGameSuspect[d] = { domain: e.domain, bundles: new Set(), hits: 0 }
+        preGameSuspect[d].bundles.add(e.bundleID || "?")
+        preGameSuspect[d].hits += (e.hits || 1)
+      }
+    }
+
+    for (let [d, info] of Object.entries(preGameSuspect)) {
+      preGameFindings.push({
+        domain: info.domain,
+        bundles: [...info.bundles],
+        hits: info.hits,
+      })
+    }
+  }
+
   // Coleta quais domínios FF foram chamados pelos apps legítimos do FF
   let ffLegitDomainsSeen = new Set()
   for (let e of netEntries) {
@@ -688,8 +940,6 @@ async function analyze(entries) {
     if (FF_LEGIT_CALLERS.has(bid)) continue
     if (IGNORED_BUNDLES.has(bid)) continue
     if (!FF_PROXY_LOGIN_DOMAINS.has(d)) continue
-    // Só dispara se o domínio NÃO foi chamado pelos apps legítimos do FF na mesma sessão
-    // Isso evita falsos positivos de janela de tempo (iOS agrupando apps diferentes)
     if (ffLegitDomainsSeen.has(d)) continue
     if (!proxyLoginSeen[d]) proxyLoginSeen[d] = { domain: e.domain, bundles: new Set(), hits: 0 }
     proxyLoginSeen[d].bundles.add(bid)
@@ -703,12 +953,9 @@ async function analyze(entries) {
   for (let e of netEntries) {
     let d = (e.domain || "").toLowerCase()
     let bid = e.bundleID || ""
-    // Se o bundle é o app legítimo do FF e o domínio é um domínio oficial de proxy/login do FF,
-    // não dispara como cheat — é tráfego normal do próprio jogo.
     if (FF_LEGIT_CALLERS.has(bid) && FF_PROXY_LOGIN_DOMAINS.has(d)) continue
     for (let [indicator, desc] of Object.entries(KNOWN_CHEAT_INFRA)) {
       if (d === indicator.toLowerCase() || d.endsWith("." + indicator.toLowerCase())) {
-        // Domínios que fazem parte do FF_PROXY_LOGIN_DOMAINS só são cheat se chamados por bundle não-legítimo
         if (FF_PROXY_LOGIN_DOMAINS.has(indicator.toLowerCase()) && FF_LEGIT_CALLERS.has(bid)) continue
         let existing = knownCheatFindings.find(k => k.indicator === indicator)
         if (existing) {
@@ -749,9 +996,12 @@ async function analyze(entries) {
 
       if (FALSE_POSITIVE_IPS.has(ip) || FALSE_POSITIVE_IPS.has(domain)) continue
 
+      // Nunca flagra domínios whitelisted (double-check)
+      if (isWhitelistedDomain(domain)) continue
+
       let domLow2 = domain.toLowerCase()
       let isTldSuspect = SUSPICIOUS_TLDS.some(t => domLow2.endsWith(t)) ||
-                         SUSPICIOUS_DOMAIN_WORDS.some(w => domLow2.split(".")[0].includes(w))
+                         (hasSuspiciousDomainWord(domain) !== null)
 
       let severity = null
       let reasons = []
@@ -818,8 +1068,9 @@ async function analyze(entries) {
 
   function hasSuspiciousTLD(domain) {
     let d = (domain || "").toLowerCase()
+    if (isWhitelistedDomain(d)) return false
     return SUSPICIOUS_TLDS.some(t => d.endsWith(t) || d.includes(t + "/")) ||
-           SUSPICIOUS_DOMAIN_WORDS.some(w => d.split(".")[0].includes(w))
+           (hasSuspiciousDomainWord(d) !== null)
   }
 
   findings.sort((a, b) => {
@@ -869,14 +1120,14 @@ async function analyze(entries) {
     ghostAppFindings.push({ bundleID: bid, domains: [...new Set(info.domains)], hits: info.hits })
   }
 
-  return { findings, netEntries, cheatAppFindings, knownCheatFindings, ghostAppFindings, proxyLoginFindings }
+  return { findings, netEntries, cheatAppFindings, knownCheatFindings, ghostAppFindings, proxyLoginFindings, preGameFindings }
 }
 
 function wait(ms) {
   return new Promise(resolve => Timer.schedule(ms, false, resolve))
 }
 
-function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ipsFindings, ipsMeta, _unused, ghostAppFindings, proxyLoginFindings, filename) {
+function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ipsFindings, ipsMeta, _unused, ghostAppFindings, proxyLoginFindings, filename, preGameFindings) {
   let allDomains = new Set(netEntries.map(e => e.domain || ""))
 
   let allTimestamps = netEntries.map(e => e.timeStamp).filter(Boolean).sort()
@@ -1022,9 +1273,37 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
 
 
 
+  // Seção de acesso pré-jogo
+  let preGameSection = ""
+  if (preGameFindings && preGameFindings.length > 0) {
+    let preGameRows = preGameFindings.map(g => {
+      let bundleList = g.bundles.map(b => `<span class="bundle" style="color:#ff6600">${b}</span>`).join(" ")
+      return `
+      <div class="pre-row">
+        <div class="pre-row-top">
+          <span class="pre-domain">${g.domain}</span>
+          <span class="pre-hits">${g.hits} hits</span>
+        </div>
+        <div class="pre-row-detail">App: ${bundleList}</div>
+      </div>`
+    }).join("")
+    preGameSection = `
+  <div class="prelim-banner">
+    <div class="prelim-header">
+      <span class="prelim-icon">⏱</span>
+      <div>
+        <div class="prelim-title">Atividade Suspeita Pré-Jogo</div>
+        <div class="prelim-sub">Domínios suspeitos acessados nos 10 minutos antes do Free Fire iniciar</div>
+      </div>
+      <span class="prelim-count">${preGameFindings.length}</span>
+    </div>
+    <div class="prelim-rows">${preGameRows}</div>
+    <div class="prelim-hint">⚠ Padrão típico de proxy/cheat sendo ativado logo antes da partida — evidência forte de uso intencional.</div>
+  </div>`
+  }
+
   let ghostSection = ""
-  if (ghostAppFindings && ghostAppFindings.length > 0) {
-    let ghostRows = ghostAppFindings.map(g => {
+  if (ghostAppFindings && ghostAppFindings.length > 0) {    let ghostRows = ghostAppFindings.map(g => {
       let domList = g.domains.slice(0,5).map(d => `<span class="ghost-domain">${d}</span>`).join("")
       let more = g.domains.length > 5 ? `<span class="ghost-more">+${g.domains.length - 5} mais</span>` : ""
       return `
@@ -1672,6 +1951,7 @@ function buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, i
   ${highCount > 0 ? `
   ${rootsWarn}
   ${ipsSection}
+  ${preGameSection}
   ${ghostSection}
   <div class="section-header sh-high">
     <div class="sh-icon">&#128683;</div>
@@ -2770,9 +3050,9 @@ async function main() {
 
   Speech.speak(S.start)
 
-  let { findings, netEntries, cheatAppFindings, knownCheatFindings, ghostAppFindings, proxyLoginFindings } = await analyze(entries)
+  let { findings, netEntries, cheatAppFindings, knownCheatFindings, ghostAppFindings, proxyLoginFindings, preGameFindings } = await analyze(entries)
 
-  let html = buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ipsFindings, ipsMeta, [], ghostAppFindings, proxyLoginFindings, filename)
+  let html = buildHTML(findings, netEntries, cheatAppFindings, knownCheatFindings, ipsFindings, ipsMeta, [], ghostAppFindings, proxyLoginFindings, filename, preGameFindings)
   await showResult(html)
 }
 
